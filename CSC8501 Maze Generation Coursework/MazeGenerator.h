@@ -24,6 +24,8 @@ public:
 	void printMaze();
 	void createMaze();
 	void createCorridors(int row, int column);
+	void removeOuterWalls();
+	bool isValidExit(int row, int column, Direction dir);
 	bool checkNeighbourTiles(int row, int column, Direction dir);
 	vector<int> getNewDirection();
 	

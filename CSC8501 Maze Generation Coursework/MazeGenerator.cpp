@@ -97,9 +97,114 @@ void MazeGenerator::createCorridors(int row, int column) {
 }
 
 
-
+void MazeGenerator::removeOuterWalls() {
+	int outerWallCount = 0;
+	//top wall
+	for (int i = 0; i < map[1].size(); i++) {
+		if (map[1][i] == 'x') {
+			outerWallCount++;
+		}
+	}
+	if (outerWallCount == map[1].size()) {
+		for (int i = 0; i < map[1].size(); i++) {
+			if (map[2][i] == 'x') {
+				map[1][i] = 'x';
+			}
+			else {
+				map[1][i] = ' ';
+			}
+		}
+	}
+	//bottom wall
+	outerWallCount = 0;
+	for (int i = 0; i < map[mapSize-2].size(); i++) {
+		if (map[mapSize-2][i] == 'x') {
+			outerWallCount++;
+		}
+	}
+	if (outerWallCount == map[mapSize-2].size()) {
+		for (int i = 0; i < map[mapSize-2].size(); i++) {
+			if (map[mapSize-3][i] == 'x') {
+				map[mapSize-2][i] = 'x';
+			}
+			else {
+				map[mapSize-2][i] = ' ';
+			}
+		}
+	}
+	//left wall
+	outerWallCount = 0;
+	for (int i = 0; i < map.size(); i++) {
+		if (map[i][1] == 'x') {
+			outerWallCount++;
+		}
+	}
+	if (outerWallCount == map.size()) {
+		for (int i = 0; i < map.size(); i++) {
+			if (map[i][2] == 'x') {
+				map[i][1] = 'x';
+			}
+			else {
+				map[i][1] = ' ';
+			}
+		}
+	}
+	//right wall
+	outerWallCount = 0;
+	for (int i = 0; i < map.size(); i++) {
+		if (map[i][mapSize-2] == 'x') {
+			outerWallCount++;
+		}
+	}
+	if (outerWallCount == map.size()) {
+		for (int i = 0; i < map.size(); i++) {
+			if (map[i][mapSize-3] == 'x') {
+				map[i][mapSize-2] = 'x';
+			}
+			else {
+				map[i][mapSize-2] = ' ';
+			}
+		}
+	}
+}
+bool MazeGenerator::isValidExit(int row, int column, Direction dir) {
+	if (dir == UP) {
+		if (map[row+1][column] == ' ') {
+			return true;
+		}
+	}
+	else if (dir == DOWN) {
+		if (map[row - 1][column] == ' ') {
+			return true;
+		}
+	}
+	else if (dir == LEFT) {
+		if (map[row][column+1] == ' ') {
+			return true;
+		}
+	}
+	else if (dir == RIGHT) {
+		if (map[row][column-1] == ' ') {
+			return true;
+		}
+	}
+	return false;
+}
 void MazeGenerator::createMaze() {
-	//carve the central 3x3 starting room
+	
+	int halfSize = mapSize / 2;
+	int row = rand() % halfSize + 1;
+	int column = rand() % halfSize + 1;
+
+
+	createCorridors(row, column);
+	
+	//get rid of double wall if one exists
+	
+	removeOuterWalls();
+
+
+	//carve the central starting room
 	for (int i = -2; i < 1; i++) {
 		for (int j = -2; j < 1; j++) {
 			map[(mapSize / 2) + i][(mapSize / 2) + j] = ' ';
@@ -109,29 +214,38 @@ void MazeGenerator::createMaze() {
 	map[(mapSize / 2) - 1][(mapSize / 2) - 1] = 'S';
 
 	//assign exits
-	for (int i = 0; i < numExits;i++) {
+	int failCount = 0;
+	while (numExits >0) {
 		enum Direction direction = static_cast<Direction>(rand() % 4);
-		
+
 		int x;
 		int y;
-		
+		int tempMazeSize = map.size() - 1;
 		if (direction == Direction::UP) {
 			x = 0;
-			y = rand() % map[0].size();
-		}else if (direction == Direction::LEFT) {
+			y = rand() % tempMazeSize + 1;
+		}
+		else if (direction == Direction::LEFT) {
 			x = rand() % map.size();
 			y = 0;
 		}
 		else if (direction == Direction::RIGHT) {
-			x = map[0].size()-1;
-			y = rand() % map.size();
+			y = tempMazeSize;
+			x = rand() % tempMazeSize + 1;
 		}
 		else if (direction == Direction::DOWN) {
-			x = rand() % map[0].size();
-			y = map.size()-1;
+			y = rand() % tempMazeSize + 1;
+			x = tempMazeSize;
 		}
-		map[x][y] = 'E';
+		if (isValidExit(x, y, direction) && failCount < 50) {
+			map[x][y] = 'E';
+			numExits--;
+		}
+		else {
+			failCount++;
+		}
 	}
+
 
 }
 int main() {
@@ -142,12 +256,10 @@ int main() {
 	cin >> mapSize;
 	cout << "Please the amount of exits you would like." << endl;
 	cin >> numExits;
-	MazeGenerator maze(mapSize,numExits);
+	
+	MazeGenerator maze(mapSize, numExits);
 
-	int row = rand() % mapSize/2;
-	int column = rand() % mapSize/2;
-
-	maze.createCorridors(row, column);
+	maze.createMaze();
 
 	maze.printMaze();
 
