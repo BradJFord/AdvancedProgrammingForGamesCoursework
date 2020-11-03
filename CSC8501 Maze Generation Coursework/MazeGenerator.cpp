@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "MazeGenerator.h"
+#include <algorithm>
 
 
 void MazeGenerator::printMaze() {
@@ -14,136 +15,89 @@ void MazeGenerator::printMaze() {
 		}
 	}
 }
-
-vector<int> MazeGenerator::createVerticalWall(int row, int point) {
-	vector<int> path;
-	cout << "Row: " << row << " Point: " << point << endl;
-	map[row][point] = 'x';
-	path.push_back(point);
-	if (row <= 1) {
-		cout << "down" << endl;
-		for (int i = row; i < map[row].size() - 1; i++) {
-			if (map[row + 1][point] == 'x') {
-				map[row][point] = 'x';
-				path.push_back(row);
-				break;
-			}
-			else {
-				map[row++][point] = 'x';
-				path.push_back(row);
+bool MazeGenerator::checkNeighbourTiles(int row, int column, Direction dir) {
+		if (dir == UP) {
+			if (row>2) {
+				if (map[row - 2][column] != ' ') {
+					return true;
+				}
 			}
 		}
-
-	}
-	else if (row <= 18) {
-		cout << "up" << endl;
-		for (int i = row; i >=1 ; i--) {
-			if (map[row - 1][point] == 'x') {
-				map[row][point] = 'x';
-				path.push_back(row);
-				break;
-			}
-			else {
-				map[row--][point] = 'x';
-				path.push_back(row);
+		else if (dir == DOWN) {
+			if (row<mapSize-2) {
+				if (map[row + 2][column] != ' ') {
+					return true;
+				}
 			}
 		}
-	}
-	int pathSize = path.size() - 1;
-	
-	if (pathSize > 1) {
-		path.erase(path.begin() + (rand() % pathSize));
-		map[path.at(rand() % pathSize)][point] = ' ';
-	}
-	return path;
+		else if (dir == LEFT) {
+			if (column>2) {
+				if (map[row][column - 2] != ' ') {
+					return true;
+				}
+			}
+		}
+		else if (dir == RIGHT) {
+			if (column < mapSize - 2) {
+				if (map[row][column + 2] != ' ') {
+					return true;
+				}
+			}
+		}
+		return false;
 }
-vector<int> MazeGenerator::createHorizontalWall(int row, int point) {
-	vector<int> path;
-	cout << "Row: " << row << " Point: " << point << endl;
-
-	map[row][point] = 'x';
-	path.push_back(point);
-	if (point <= 1) {
-		cout << "right" << endl;
-		for (int i = point; i < map[row].size() - 1; i++) {
-			if (map[row][point + 1] == 'x') {
-				
-				map[row][point] = 'x';
-				path.push_back(point);
-				break;
-			}
-			else {
-				map[row][point++] = 'x';
-				path.push_back(point);
-			}
-		}
+vector<int> MazeGenerator::getNewDirection() {
+	vector<int> directions;
+	for (int i = 0; i < 4; i++) {
+		directions.push_back(i);
 	}
-	else if (point <= 18) {
-		cout << "left" << endl;
-		for (int i = point; i >= 1; i--) {
-			if (map[row][point - 1] == 'x') {
-				
-				map[row][point] = 'x';
-				path.push_back(point);
-				break;
-			}
-			else {
-				map[row][point--] = 'x';
-				path.push_back(point);
-			}
-		}
-	}
-	int pathSize = path.size() - 1;
-	
-	if (pathSize>1) {
-		path.erase(path.begin() + (rand() % pathSize));
-		map[row][path.at(rand() % pathSize)] = ' ';
-	}
-	return path;
+	random_shuffle(directions.begin(), directions.end());
+	return directions;
 }
-void MazeGenerator::createCorridors(int bisectRow, int bisectPoint, int stop) {
-	int row = bisectRow;
-	int point = bisectPoint;
 
-	//choose direction to bisect the map, based on the position of the bisection point
-	cout << "Horizontal or Vert " <<horizontalOrVert << endl;
-	vector<int> path;
+void MazeGenerator::createCorridors(int row, int column) {
+	map[row][column] = ' ';
+	vector<int> directions = getNewDirection();
 
+	for (int i = 0; i < directions.size(); i++) {
+		int newRow = 0;
+		int newColumn = 0;
+		direction = static_cast<Direction>(directions.at(i));
+			
+		if (direction == UP) {
+			newRow = -1;
+		}
+		else if (direction == DOWN) {
 
-	if (horizontalOrVert == 0) {
-		path = createHorizontalWall(row, point);
-		horizontalOrVert = 1;
-	}
-	else {
-		path = createVerticalWall(row,point);
-		horizontalOrVert = 0;
-	}
-	printMaze();
-	
+			newRow = 1;
+		}
+		else if (direction == LEFT) {
+		
+			newColumn = -1;
+		}
+		else if (direction == RIGHT) {
 
+			newColumn = 1;
+		}
+		int x2 = row + (newRow * 2);
+		int y2 = column + (newColumn * 2);
 
-	cout << "path size: " << path.size() << endl;
-	int randomRowPoint = path.size();
-	randomRowPoint = rand() % randomRowPoint +1;
-	//randomRowPoint = (randomRowPoint > 0) ? randomRowPoint : rand() % (mapSize - 2);
-	stop--;
-
-		if (horizontalOrVert == 0) {
-			if (stop > 0) {
-				createCorridors(randomRowPoint, bisectPoint, stop);
+		if (x2 >=  1 && x2 < mapSize-1) {
+			if(y2 >= 1 && y2 < mapSize-1){
+				if (map[x2][y2] == 'x') {
+					map[x2 - newRow][y2 - newColumn] = ' ';
+					createCorridors(x2, y2);
+				}
 			}
 		}
-		else {
-			if (stop > 0) {
-				createCorridors(bisectRow, randomRowPoint, stop);
-			}
-		}
-		//get random point on made line make a pathway, find another random point and pass it into the next recursive call
-
+	}	
+			//printMaze();
+			//cout << " " << endl;
+			//cout << " " << endl;
 }
 
 
-//rename to generate maze and call createCorridors at the start
+
 void MazeGenerator::createMaze() {
 	//carve the central 3x3 starting room
 	for (int i = -2; i < 1; i++) {
@@ -189,34 +143,14 @@ int main() {
 	cout << "Please the amount of exits you would like." << endl;
 	cin >> numExits;
 	MazeGenerator maze(mapSize,numExits);
-	maze.horizontalOrVert = rand() % 2; //0 horizontal, 1 vertical
 
-	//choose row and point to begin the bisection of the map
-	int mapSize1 = maze.map.size() - 2;
-	int bisectRow = (rand() % mapSize1) + 1;
-	cout << " Row " << bisectRow << endl;
-	int bisectPoint = ((rand() % 2) > 0) ? mapSize-2 : 1;
-	//int bisectPoint = (rand() % mapSize1) + 1;
-	cout << "Point " << bisectPoint << endl;
+	int row = rand() % mapSize/2;
+	int column = rand() % mapSize/2;
 
+	maze.createCorridors(row, column);
 
-	//create outer wall of maze
-	for (int i = 0; i < (mapSize - 1); i++) {
-		maze.map[i][0] = 'x';
-	}
-	for (int i = 0; i < (mapSize - 1); i++) {
-		maze.map[0][i] = 'x';
-	}
-	for (int i = 0; i < (mapSize - 1); i++) {
-		maze.map[i][mapSize-1] = 'x';
-	}
-	for (int i = 0; i < (mapSize); i++) {
-		maze.map[mapSize-1][i] = 'x';
-	}
 	maze.printMaze();
 
-	maze.createCorridors(bisectRow, bisectPoint,30);
-	//map = maze.createCorridors(map, bisectRow, bisectPoint);
-	maze.printMaze();
+
 	return 0;
 }
