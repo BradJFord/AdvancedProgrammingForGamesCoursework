@@ -7,27 +7,17 @@
 #include <string>
 
 
-MazeGenerator::AStarNode MazeGenerator::initialiseNode(int row, int column, int destinationRow, int destinationColumn , AStarNode& parentNode) {
-	AStarNode newNode;
-	newNode.row = row;
-	newNode.column = column;
-	newNode.parentNode = &parentNode;
-	newNode.h = distanceToDestination(row, column, destinationRow, destinationColumn);
-	newNode.g = parentNode.g + 1;
-	newNode.f = newNode.g + newNode.h;
+MazeGenerator::AStarNode* MazeGenerator::initialiseNode(int row, int column, int destinationRow, int destinationColumn , AStarNode* parentNode) {
+	AStarNode* newNode = new AStarNode;
+	newNode->row = row;
+	newNode->column = column;
+	newNode->parentNode = parentNode;
+	newNode->h = distanceToDestination(row, column, destinationRow, destinationColumn);
+	newNode->g = parentNode->g + 1;
+	newNode->f = newNode->g + newNode->h;
 	return newNode;
 }
-void MazeGenerator::drawShortestPath(vector<AStarNode>path) {
-	for (int i = 1; i < path.size();i++) {
-		int row = path.at(i).row;
-		int column = path.at(i).column;
-		map[row][column] = '-';
-		cout << endl;
-		cout << endl;
-		printMaze();
 
-	}
-}
 int MazeGenerator::distanceToDestination(int currentRow, int currentColumn, int destinationRow, int destinationColumn) {
 	int distanceCount = 0;
 	int posOrNegativeRow = (currentRow <= destinationRow) ? 1 : -1;
@@ -43,75 +33,90 @@ int MazeGenerator::distanceToDestination(int currentRow, int currentColumn, int 
 	}
 	return distanceCount;
 }
-vector<MazeGenerator::AStarNode> MazeGenerator::getAdjacentNodes(AStarNode& node, int destinatonRow, int destinationColumn) {
-	vector<AStarNode> adjacentNodes;
+vector<MazeGenerator::AStarNode*> MazeGenerator::getAdjacentNodes(AStarNode* node, int destinatonRow, int destinationColumn) {
+	vector<AStarNode*> adjacentNodes;
 
-	int row = node.row;
-	int column = node.column;
-	//if (node.row < mapSize-2 && node.row>1) {
-		if (map[row + 1][column] == ' ') {
+	int row = node->row;
+	int column = node->column;
+	if (row >0 && row < 19) {
+		if (map[row + 1][column] != 'x') {
 			adjacentNodes.push_back(initialiseNode(row + 1, column, destinatonRow, destinationColumn, node));
 		}
-		if (map[row - 1][column] == ' ') {
+		if (map[row - 1][column] != 'x') {
 			adjacentNodes.push_back(initialiseNode(row - 1, column, destinatonRow, destinationColumn, node));
 		}
-	//}
-	//if (node.column <mapSize-2 && node.column > 1) {
-		if (map[row][column + 1] == ' ') {
+	}
+	if (column >0 && column < 19) {
+		if (map[row][column + 1] != 'x') {
 			adjacentNodes.push_back(initialiseNode(row, column + 1, destinatonRow, destinationColumn, node));
 		}
-		if (map[row][column - 1] == ' ') {
+		if (map[row][column - 1] != 'x') {
 			adjacentNodes.push_back(initialiseNode(row, column - 1, destinatonRow, destinationColumn, node));
 		}
-//	}
+	}
 	return adjacentNodes;
 }
-MazeGenerator::AStarNode MazeGenerator::findSmallestFValue(vector<AStarNode> evaluationList) {
-	AStarNode smallestFnode = evaluationList.at(0);
+MazeGenerator::AStarNode* MazeGenerator::findSmallestFValue(vector<AStarNode*> evaluationList) {
+	AStarNode* smallestFnode = evaluationList.at(0);
 	for (int i = 1; i < evaluationList.size();i++) {
-		if (evaluationList.at(i).f < smallestFnode.f) {
+		if (evaluationList.at(i)->f < smallestFnode->f) {
 			smallestFnode = evaluationList.at(i);
 		}
 	}
 	return smallestFnode;
 }
-bool MazeGenerator::endReached(vector<AStarNode> closedPath, int destinationRow, int destinationColumn) {
+bool MazeGenerator::endReached(vector<AStarNode*> closedPath, int destinationRow, int destinationColumn) {
 	for (int i = 0; i < closedPath.size(); i++) {
 
 		//cout << closedPath.at(i).row << " " << closedPath.at(i).column << endl;
-		if ((closedPath.at(i).row == destinationRow)) {
-			if ((closedPath.at(i).column == destinationColumn)) {
+		if ((closedPath.at(i)->row == destinationRow)) {
+			if ((closedPath.at(i)->column == destinationColumn)) {
 				return true;
 			}
 		}
 	}
 	return false;
 }
-vector<MazeGenerator::AStarNode> MazeGenerator::createFinalPath(AStarNode destinationNode) {
+void MazeGenerator::createFinalPath(AStarNode* destinationNode) {
 	vector<AStarNode> flippedVector;
-	AStarNode currentNode = destinationNode;
-	flippedVector.push_back(currentNode);
-	while (currentNode.parentNode != nullptr) {
-		currentNode = *currentNode.parentNode;
-		if (currentNode.parentNode != nullptr) {
-			flippedVector.push_back(currentNode);
+	AStarNode* currentNode = destinationNode;
+	flippedVector.push_back(*currentNode);
+	while (currentNode->parentNode != nullptr) {
+		currentNode = currentNode->parentNode;
+		if (currentNode->parentNode != nullptr) {
+			flippedVector.push_back(*currentNode);
 		}
 	}
-	drawShortestPath(flippedVector);
-	return flippedVector;
+	vector<AStarNode> finalVector;
+	for (int i = flippedVector.size()-1; i >=0;i--) {
+		finalVector.push_back(flippedVector.at(i));
+	}
+	for (int i = 0; i < finalVector.size(); i++) {
+		int row = finalVector.at(i).row;
+		int column = finalVector.at(i).column;
+		if (map[row][column] != 'E') {
+			map[row][column] = '-';
+		}
+	}
 }
-void MazeGenerator::findShortestPath(int row, int column, int destinationRow, int destinationColumn) {
-	AStarNode startingNode;
-	startingNode.row = row;
-	startingNode.column = column;
-	startingNode.g = 0;
-	startingNode.h = distanceToDestination(row, column,destinationRow, destinationColumn);
-	startingNode.f = startingNode.g + startingNode.h;
-	vector<AStarNode> evaluationList;
-	vector<AStarNode> closedPath;
+void MazeGenerator::findShortestPath(int row, int column, exitPositions exit) {
+	
+	int destinationRow = exit.row;
+	int destinationColumn = exit.column;
+
+
+	AStarNode* startingNode = new AStarNode;
+	startingNode->row = row;
+	startingNode->column = column;
+	startingNode->g = 0;
+	startingNode->h = distanceToDestination(row, column,destinationRow, destinationColumn);
+	startingNode->f = startingNode->g + startingNode->h;
+	startingNode->parentNode = nullptr;
+	vector<AStarNode*> evaluationList;
+	vector<AStarNode*> closedPath;
 	evaluationList.push_back(startingNode);
 
-	AStarNode currentNode;
+	AStarNode* currentNode;
 
 	while (evaluationList.size() > 0) {
 		currentNode = findSmallestFValue(evaluationList);
@@ -119,7 +124,7 @@ void MazeGenerator::findShortestPath(int row, int column, int destinationRow, in
 		closedPath.push_back(currentNode);
 		int indexToRemove = 0;
 		for (int i = 0; i < evaluationList.size();i++) {
-			if ((currentNode.row == evaluationList.at(i).row) && (currentNode.column == evaluationList.at(i).column)) {
+			if ((currentNode->row == evaluationList.at(i)->row) && (currentNode->column == evaluationList.at(i)->column)) {
 				indexToRemove = i;
 				break;
 			}
@@ -127,21 +132,20 @@ void MazeGenerator::findShortestPath(int row, int column, int destinationRow, in
 		evaluationList.erase(evaluationList.begin()+indexToRemove);
 
 		if (endReached(closedPath, destinationRow, destinationColumn)) {
-			cout << "found" << destinationRow <<" " << destinationColumn << endl;
 			createFinalPath(currentNode);
 			break;
 		}
 
-		vector<AStarNode> adjacentNodes = getAdjacentNodes(currentNode,destinationRow,destinationColumn);
+		vector<AStarNode*> adjacentNodes = getAdjacentNodes(currentNode,destinationRow,destinationColumn);
 		for (int i = 0; i < adjacentNodes.size();i++) {
-			if (endReached(closedPath, adjacentNodes.at(i).row,adjacentNodes.at(i).column)) {
+			if (endReached(closedPath, adjacentNodes.at(i)->row,adjacentNodes.at(i)->column)) {
 				continue;
 			}
-			if (!endReached(evaluationList,adjacentNodes.at(i).row, adjacentNodes.at(i).column)) {
+			if (!endReached(evaluationList,adjacentNodes.at(i)->row, adjacentNodes.at(i)->column)) {
 				evaluationList.push_back(adjacentNodes.at(i));
 			}
-			else if ((adjacentNodes.at(i).h) + (currentNode.g +1) < adjacentNodes.at(i).f) {
-				adjacentNodes.at(i).parentNode = &currentNode;
+			else if ((adjacentNodes.at(i)->h) + (currentNode->g +1) < adjacentNodes.at(i)->f) {
+				adjacentNodes.at(i)->parentNode = currentNode;
 			}
 		}
 	
@@ -393,11 +397,13 @@ void MazeGenerator::createMaze() {
 		if (direction == Direction::UP) {
 			x = 0;
 			y = rand() % tempMazeSize + 1;
+			
 
 		}
 		else if (direction == Direction::LEFT) {
 			x = rand() % map.size();
 			y = 0;
+
 
 		}
 		else if (direction == Direction::RIGHT) {
@@ -414,32 +420,18 @@ void MazeGenerator::createMaze() {
 			map[x][y] = 'E';
 			numExits--;
 
-			if (direction==UP) {
-				//testing purposes
-				exitRow = x+1;
-				exitColumn = y;
-			}
-			if (direction == DOWN) {
-				//testing purposes
-				exitRow = x-1;
-				exitColumn = y;
-			}
-			if (direction == LEFT) {
-				//testing purposes
-				exitRow = x;
-				exitColumn = y+1;
-			}
-			if (direction == RIGHT) {
-				//testing purposes
-				exitRow = x;
-				exitColumn = y-1;
-			}
+			exitPositions newExit;
+			newExit.row = x;
+			newExit.column = y;
+			exits.push_back(newExit);
 		}
 		else {
 			failCount++;
 		}
 	}
-
+	for (int i = 0; i < exits.size();i++) {
+		findShortestPath((mapSize / 2) - 1, (mapSize / 2) - 1,exits.at(i));
+	}
 
 }
 int main() {
@@ -456,9 +448,7 @@ int main() {
 	maze.createMaze();
 
 	maze.printMaze();
-	cout << "Dest is equal to: "<< maze.exitRow << " " << maze.exitColumn << endl;
 
-	maze.findShortestPath((mapSize/2)-1, (mapSize/2)-1,maze.exitRow, maze.exitColumn);
 
 	cout << endl;
 	cout << endl;
