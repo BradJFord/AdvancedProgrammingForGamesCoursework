@@ -1,11 +1,4 @@
-#include <iostream>
-#include <stdlib.h>
-#include <time.h>
 #include "MazeGenerator.h"
-#include <algorithm>
-#include <fstream>
-#include <string>
-
 
 MazeGenerator::AStarNode* MazeGenerator::initialiseNode(int row, int column, int destinationRow, int destinationColumn , AStarNode* parentNode) {
 	AStarNode* newNode = new AStarNode;
@@ -38,7 +31,7 @@ vector<MazeGenerator::AStarNode*> MazeGenerator::getAdjacentNodes(AStarNode* nod
 
 	int row = node->row;
 	int column = node->column;
-	if (row >0 && row < 19) {
+	if (row >0 && row < mapSize-1) {
 		if (map[row + 1][column] != 'x') {
 			adjacentNodes.push_back(initialiseNode(row + 1, column, destinatonRow, destinationColumn, node));
 		}
@@ -46,7 +39,7 @@ vector<MazeGenerator::AStarNode*> MazeGenerator::getAdjacentNodes(AStarNode* nod
 			adjacentNodes.push_back(initialiseNode(row - 1, column, destinatonRow, destinationColumn, node));
 		}
 	}
-	if (column >0 && column < 19) {
+	if (column >0 && column < mapSize-1) {
 		if (map[row][column + 1] != 'x') {
 			adjacentNodes.push_back(initialiseNode(row, column + 1, destinatonRow, destinationColumn, node));
 		}
@@ -95,11 +88,11 @@ void MazeGenerator::createFinalPath(AStarNode* destinationNode) {
 		int row = finalVector.at(i).row;
 		int column = finalVector.at(i).column;
 		if (map[row][column] != 'E') {
-			map[row][column] = '-';
+			this->map[row][column] = '-';
 		}
 	}
 }
-void MazeGenerator::findShortestPath(int row, int column, exitPositions exit) {
+void MazeGenerator::findShortestPath(int row, int column, Positions exit) {
 	
 	int destinationRow = exit.row;
 	int destinationColumn = exit.column;
@@ -174,13 +167,34 @@ void MazeGenerator::saveMaze() {
 	}
 	saveFile.close();
 }
-void MazeGenerator::readMazeFile() {
-	ifstream inFile("mazeSave.txt");
+
+void MazeGenerator::readMazeFile(string filename) {
+	int exitCount = 0;
+	ifstream inFile(filename);
 	string line;
 	if (inFile.is_open()) {
 		int lineNumber = 0;
 		while (getline(inFile,line)) {
-			
+			if (this->mapSize<=0) {
+				this->mapSize = line.size();
+				map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
+			}
+			for (int i = 0; i < line.size(); i++) {
+				map[lineNumber][i] = line[i];
+				if (map[lineNumber][i] == 'E') {
+					exitCount++;
+
+					Positions newExit;
+					newExit.row = lineNumber;
+					newExit.column = i;
+					exits.push_back(newExit);
+				}
+				else if (map[lineNumber][i] == 'S') {
+					this->startingPosition.row = lineNumber;
+					this->startingPosition.column = i;
+				}
+			}
+			lineNumber++;
 		}
 		inFile.close();
 	}
@@ -189,6 +203,7 @@ void MazeGenerator::readMazeFile() {
 			cout << "Unable to Open file" << endl;
 		}
 	}
+	this->numExits = exitCount;
 }
 
 bool MazeGenerator::checkNeighbourTiles(int row, int column, Direction dir) {
@@ -369,6 +384,9 @@ void MazeGenerator::createMaze() {
 	int row = rand() % halfSize + 1;
 	int column = rand() % halfSize + 1;
 
+	startingPosition;
+	startingPosition.row = (mapSize / 2) - 1;
+	startingPosition.column = (mapSize / 2) - 1;
 
 	createCorridors(row, column);
 	
@@ -384,7 +402,7 @@ void MazeGenerator::createMaze() {
 		}
 	}
 
-	map[(mapSize / 2) - 1][(mapSize / 2) - 1] = 'S';
+	map[startingPosition.row][startingPosition.column] = 'S';
 
 	//assign exits
 	int failCount = 0;
@@ -397,8 +415,7 @@ void MazeGenerator::createMaze() {
 		if (direction == Direction::UP) {
 			x = 0;
 			y = rand() % tempMazeSize + 1;
-			
-
+	
 		}
 		else if (direction == Direction::LEFT) {
 			x = rand() % map.size();
@@ -420,7 +437,7 @@ void MazeGenerator::createMaze() {
 			map[x][y] = 'E';
 			numExits--;
 
-			exitPositions newExit;
+			Positions newExit;
 			newExit.row = x;
 			newExit.column = y;
 			exits.push_back(newExit);
@@ -429,40 +446,5 @@ void MazeGenerator::createMaze() {
 			failCount++;
 		}
 	}
-	for (int i = 0; i < exits.size();i++) {
-		findShortestPath((mapSize / 2) - 1, (mapSize / 2) - 1,exits.at(i));
-	}
 
-}
-int main() {
-	srand(time(NULL));
-	int mapSize;
-	int numExits;
-	cout << "Please enter a map size, (e.g. map size of 20 will result in 20x20 map)" << endl;
-	cin >> mapSize;
-	cout << "Please the amount of exits you would like." << endl;
-	cin >> numExits;
-	
-	MazeGenerator maze(mapSize, numExits);
-
-	maze.createMaze();
-
-	maze.printMaze();
-
-
-	cout << endl;
-	cout << endl;
-	maze.printMaze();
-
-
-	int option;
-	cout << "1. Save Maze To File" << endl;
-
-	cin >> option;
-
-	if (option == 1) {
-		maze.saveMaze();
-	}
-
-	return 0;
 }
