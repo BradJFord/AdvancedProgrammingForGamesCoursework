@@ -20,6 +20,10 @@ public:
 		RIGHT = 3
 	};
 
+	struct Positions {
+		int row;
+		int column;
+	};
 	struct AStarNode {
 		int g; //number of steps from point starting position to current position.
 		int h; // number of steps from current position to destination.
@@ -27,16 +31,11 @@ public:
 
 
 		//current position (row is x and y is column)
-		int row;
-		int column;
+		Positions pos;
 
 		int f; //sum of g and h
 	};
 
-	struct Positions {
-		int row;
-		int column;
-	};
 	MazeGenerator() {
 		this->mapSize = 0;
 		this->numExits = 0;
@@ -50,23 +49,26 @@ public:
 
 	void printMaze();
 	void createMaze();
-	void createCorridors(int row, int column);
+	void createCorridors(Positions pos);
 	void removeOuterWalls();
-	bool isValidExit(int row, int column, Direction dir);
-	bool checkNeighbourTiles(int row, int column, Direction dir);
+	bool isValidExit(Positions exit, Direction dir);
+	bool checkNeighbourTiles(Positions pos, Direction dir);
 	void saveMaze(string filename);
+	void carveCentralRoom();
+	void assignExits();
 	bool readMazeFile(string filename);
 	vector<int> getNewDirection();
 
 	//returns nodes in every cardinal direction if they exist/are allowed to be used to create a path.
-	vector<AStarNode*> getAdjacentNodes(AStarNode* node, int destinationRow, int destinationColumn);
-	int distanceToDestination(int currentRow, int currentColumn,int destinationRow, int destinationColumn);
-	AStarNode* initialiseNode(int row, int column, int destinationRow, int destinationColumn, AStarNode* parentNode);
-	void findShortestPath(int row,int column, Positions exit);
+	vector<AStarNode*> getAdjacentNodes(AStarNode* node, Positions destination);
+	int distanceToDestination(Positions currentPosition, Positions destination);
+	AStarNode* initialiseNode(Positions pos, Positions destination, AStarNode* parentNode);
+	void findShortestPath(Positions pos, Positions exit);
 	AStarNode* findSmallestFValue(vector<AStarNode*> evaluationList);
-	bool endReached(vector<AStarNode*> closedList, int destinationRow, int destinationColumn);
+	bool containsPosition(vector<AStarNode*> closedList, Positions destinaion);
 	void createFinalPath(AStarNode* destinationNode);
-
+	AStarNode* initialiseStartingNode(Positions pos, Positions exit);
+	void eraseListPointers(vector<AStarNode*> evaluationList, vector<AStarNode*> closedPath);
 
 	vector< vector<char>> map;
 	vector<Positions> exits;
@@ -75,9 +77,6 @@ public:
 	enum Direction direction;
 
 	Positions startingPosition;
-
-	//int exitRow;
-	//int exitColumn;
 	
 };
 

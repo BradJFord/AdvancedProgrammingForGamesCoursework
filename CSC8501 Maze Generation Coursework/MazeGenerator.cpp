@@ -1,54 +1,80 @@
 #include "MazeGenerator.h"
 
-MazeGenerator::AStarNode* MazeGenerator::initialiseNode(int row, int column, int destinationRow, int destinationColumn , AStarNode* parentNode) {
+MazeGenerator::AStarNode* MazeGenerator::initialiseNode(Positions pos, Positions destination , AStarNode* parentNode) {
 	AStarNode* newNode = new AStarNode;
-	newNode->row = row;
-	newNode->column = column;
+	newNode->pos.row = pos.row;
+	newNode->pos.column = pos.column;
 	newNode->parentNode = parentNode;
-	newNode->h = distanceToDestination(row, column, destinationRow, destinationColumn);
+	newNode->h = distanceToDestination(pos, destination);
 	newNode->g = parentNode->g + 1;
 	newNode->f = newNode->g + newNode->h;
 	return newNode;
 }
 
-int MazeGenerator::distanceToDestination(int currentRow, int currentColumn, int destinationRow, int destinationColumn) {
-	int distanceCount = 0;
-	int posOrNegativeRow = (currentRow <= destinationRow) ? 1 : -1;
-	int posOrNegativeColumn = (currentColumn <= destinationColumn) ? 1 : -1;
 
-	while (currentRow !=destinationRow) {
-		currentRow = currentRow + posOrNegativeRow;
+
+int MazeGenerator::distanceToDestination(Positions pos, Positions destination) {
+	int distanceCount = 0;
+	int posOrNegativeRow = (pos.row <= destination.row) ? 1 : -1;
+	int posOrNegativeColumn = (pos.column <= destination.column) ? 1 : -1;
+
+	while (pos.row != destination.row) {
+		pos.row = pos.row + posOrNegativeRow;
 		distanceCount++;
 	}
-	while (currentColumn != destinationColumn) {
-		currentColumn = currentColumn + posOrNegativeColumn;
+	while (pos.column != destination.column) {
+		pos.column = pos.column + posOrNegativeColumn;
 		distanceCount++;
 	}
 	return distanceCount;
 }
-vector<MazeGenerator::AStarNode*> MazeGenerator::getAdjacentNodes(AStarNode* node, int destinatonRow, int destinationColumn) {
+
+
+
+vector<MazeGenerator::AStarNode*> MazeGenerator::getAdjacentNodes(AStarNode* node, Positions destination) {
 	vector<AStarNode*> adjacentNodes;
 
-	int row = node->row;
-	int column = node->column;
-	if (row >0 && row < mapSize-1) {
-		if (map[row + 1][column] != 'x') {
-			adjacentNodes.push_back(initialiseNode(row + 1, column, destinatonRow, destinationColumn, node));
+	Positions tempPos;
+	tempPos.row = node->pos.row;
+	tempPos.column = node->pos.column;
+
+	if (tempPos.row >0 && tempPos.row < mapSize-1) {
+		if (map[tempPos.row + 1][tempPos.column] != 'x') {
+			tempPos.row = tempPos.row + 1;
+			adjacentNodes.push_back(initialiseNode(tempPos, destination, node));
 		}
-		if (map[row - 1][column] != 'x') {
-			adjacentNodes.push_back(initialiseNode(row - 1, column, destinatonRow, destinationColumn, node));
+
+		tempPos.row = node->pos.row;
+		tempPos.column = node->pos.column;
+
+		if (map[tempPos.row - 1][tempPos.column] != 'x') {
+			tempPos.row = tempPos.row - 1;
+			adjacentNodes.push_back(initialiseNode(tempPos, destination, node));
 		}
 	}
-	if (column >0 && column < mapSize-1) {
-		if (map[row][column + 1] != 'x') {
-			adjacentNodes.push_back(initialiseNode(row, column + 1, destinatonRow, destinationColumn, node));
+
+	tempPos.row = node->pos.row;
+	tempPos.column = node->pos.column;
+
+	if (tempPos.column >0 && tempPos.column < mapSize-1) {
+		if (map[tempPos.row][tempPos.column + 1] != 'x') {
+			tempPos.column = tempPos.column + 1;
+			adjacentNodes.push_back(initialiseNode(tempPos, destination, node));
 		}
-		if (map[row][column - 1] != 'x') {
-			adjacentNodes.push_back(initialiseNode(row, column - 1, destinatonRow, destinationColumn, node));
+
+		tempPos.row = node->pos.row;
+		tempPos.column = node->pos.column;
+
+		if (map[tempPos.row][tempPos.column - 1] != 'x') {
+			tempPos.column = tempPos.column - 1;
+			adjacentNodes.push_back(initialiseNode(tempPos, destination, node));
 		}
 	}
 	return adjacentNodes;
 }
+
+
+
 MazeGenerator::AStarNode* MazeGenerator::findSmallestFValue(vector<AStarNode*> evaluationList) {
 	AStarNode* smallestFnode = evaluationList.at(0);
 	for (int i = 1; i < evaluationList.size();i++) {
@@ -58,18 +84,22 @@ MazeGenerator::AStarNode* MazeGenerator::findSmallestFValue(vector<AStarNode*> e
 	}
 	return smallestFnode;
 }
-bool MazeGenerator::endReached(vector<AStarNode*> closedPath, int destinationRow, int destinationColumn) {
-	for (int i = 0; i < closedPath.size(); i++) {
 
-		//cout << closedPath.at(i).row << " " << closedPath.at(i).column << endl;
-		if ((closedPath.at(i)->row == destinationRow)) {
-			if ((closedPath.at(i)->column == destinationColumn)) {
+
+
+bool MazeGenerator::containsPosition(vector<AStarNode*> closedPath, Positions destination) {
+	for (int i = 0; i < closedPath.size(); i++) {
+		if ((closedPath.at(i)->pos.row == destination.row)) {
+			if ((closedPath.at(i)->pos.column == destination.column)) {
 				return true;
 			}
 		}
 	}
 	return false;
 }
+
+
+
 void MazeGenerator::createFinalPath(AStarNode* destinationNode) {
 	vector<AStarNode> flippedVector;
 	AStarNode* currentNode = destinationNode;
@@ -85,56 +115,70 @@ void MazeGenerator::createFinalPath(AStarNode* destinationNode) {
 		finalVector.push_back(flippedVector.at(i));
 	}
 	for (int i = 0; i < finalVector.size(); i++) {
-		int row = finalVector.at(i).row;
-		int column = finalVector.at(i).column;
+		int row = finalVector.at(i).pos.row;
+		int column = finalVector.at(i).pos.column;
 		if (map[row][column] != 'E') {
 			this->map[row][column] = 'o';
 		}
 	}
 }
-void MazeGenerator::findShortestPath(int row, int column, Positions exit) {
-	
-	int destinationRow = exit.row;
-	int destinationColumn = exit.column;
 
-
-	AStarNode* startingNode = new AStarNode;
-	startingNode->row = row;
-	startingNode->column = column;
+MazeGenerator::AStarNode* MazeGenerator::initialiseStartingNode(Positions pos, Positions exit) {
+	AStarNode* startingNode = new AStarNode;;
+	startingNode->pos.row = pos.row;
+	startingNode->pos.column = pos.column;
 	startingNode->g = 0;
-	startingNode->h = distanceToDestination(row, column,destinationRow, destinationColumn);
+	startingNode->h = distanceToDestination(pos, exit);
 	startingNode->f = startingNode->g + startingNode->h;
 	startingNode->parentNode = nullptr;
+
+	return startingNode;
+}
+
+void MazeGenerator::eraseListPointers(vector<AStarNode*> evaluationList, vector<AStarNode*> closedPath) {
+	for (int i = 0; i < evaluationList.size(); i++) {
+		delete evaluationList.at(i);
+	}
+	for (int i = 0; i < closedPath.size(); i++) {
+		delete closedPath.at(i);
+	}
+}
+void MazeGenerator::findShortestPath(Positions pos, Positions exit) {
+	
+	AStarNode* startingNode = initialiseStartingNode(pos, exit);
 	vector<AStarNode*> evaluationList;
 	vector<AStarNode*> closedPath;
-	evaluationList.push_back(startingNode);
 
+	evaluationList.push_back(startingNode);
 	AStarNode* currentNode;
 
 	while (evaluationList.size() > 0) {
 		currentNode = findSmallestFValue(evaluationList);
-
 		closedPath.push_back(currentNode);
 		int indexToRemove = 0;
+
 		for (int i = 0; i < evaluationList.size();i++) {
-			if ((currentNode->row == evaluationList.at(i)->row) && (currentNode->column == evaluationList.at(i)->column)) {
+			if ((currentNode->pos.row == evaluationList.at(i)->pos.row) && (currentNode->pos.column == evaluationList.at(i)->pos.column)) {
 				indexToRemove = i;
 				break;
 			}
 		}
 		evaluationList.erase(evaluationList.begin()+indexToRemove);
 
-		if (endReached(closedPath, destinationRow, destinationColumn)) {
+		if (containsPosition(closedPath, exit)) {
 			createFinalPath(currentNode);
+			eraseListPointers(evaluationList, closedPath);
+			evaluationList.clear();
+			closedPath.clear();
 			break;
 		}
 
-		vector<AStarNode*> adjacentNodes = getAdjacentNodes(currentNode,destinationRow,destinationColumn);
+		vector<AStarNode*> adjacentNodes = getAdjacentNodes(currentNode,exit);
 		for (int i = 0; i < adjacentNodes.size();i++) {
-			if (endReached(closedPath, adjacentNodes.at(i)->row,adjacentNodes.at(i)->column)) {
+			if (containsPosition(closedPath, adjacentNodes.at(i)->pos)) {
 				continue;
 			}
-			if (!endReached(evaluationList,adjacentNodes.at(i)->row, adjacentNodes.at(i)->column)) {
+			if (!containsPosition(evaluationList,adjacentNodes.at(i)->pos)) {
 				evaluationList.push_back(adjacentNodes.at(i));
 			}
 			else if ((adjacentNodes.at(i)->h) + (currentNode->g +1) < adjacentNodes.at(i)->f) {
@@ -143,18 +187,24 @@ void MazeGenerator::findShortestPath(int row, int column, Positions exit) {
 		}
 	
 	}
+
 }
+
+
 
 void MazeGenerator::printMaze() {
 	for (int i = 0; i < map.size(); i++) {
 		for (int j = 0; j < map[0].size(); j++) {
-			cout << map[i][j] << " ";
+			cout << map[i][j] << "";
 			if (j == map[0].size() - 1) {
 				cout << endl;
 			}
 		}
 	}
 }
+
+
+
 void MazeGenerator::saveMaze(string filename) {
 	ofstream saveFile;
 	saveFile.open(filename);
@@ -168,6 +218,8 @@ void MazeGenerator::saveMaze(string filename) {
 	}
 	saveFile.close();
 }
+
+
 
 bool MazeGenerator::readMazeFile(string filename) {
 	int exitCount = 0;
@@ -209,37 +261,42 @@ bool MazeGenerator::readMazeFile(string filename) {
 	this->numExits = exitCount;
 }
 
-bool MazeGenerator::checkNeighbourTiles(int row, int column, Direction dir) {
+
+
+bool MazeGenerator::checkNeighbourTiles(Positions pos, Direction dir) {
 		if (dir == UP) {
-			if (row>2) {
-				if (map[row - 2][column] != ' ') {
+			if (pos.row>2) {
+				if (map[pos.row - 2][pos.column] != ' ') {
 					return true;
 				}
 			}
 		}
 		else if (dir == DOWN) {
-			if (row<mapSize-2) {
-				if (map[row + 2][column] != ' ') {
+			if (pos.row<mapSize-2) {
+				if (map[pos.row + 2][pos.column] != ' ') {
 					return true;
 				}
 			}
 		}
 		else if (dir == LEFT) {
-			if (column>2) {
-				if (map[row][column - 2] != ' ') {
+			if (pos.column>2) {
+				if (map[pos.row][pos.column - 2] != ' ') {
 					return true;
 				}
 			}
 		}
 		else if (dir == RIGHT) {
-			if (column < mapSize - 2) {
-				if (map[row][column + 2] != ' ') {
+			if (pos.column < mapSize - 2) {
+				if (map[pos.row][pos.column + 2] != ' ') {
 					return true;
 				}
 			}
 		}
 		return false;
 }
+
+
+
 vector<int> MazeGenerator::getNewDirection() {
 	vector<int> directions;
 	for (int i = 0; i < 4; i++) {
@@ -249,8 +306,9 @@ vector<int> MazeGenerator::getNewDirection() {
 	return directions;
 }
 
-void MazeGenerator::createCorridors(int row, int column) {
-	map[row][column] = ' ';
+
+void MazeGenerator::createCorridors(Positions pos) {
+	map[pos.row][pos.column] = ' ';
 	vector<int> directions = getNewDirection();
 
 	for (int i = 0; i < directions.size(); i++) {
@@ -258,29 +316,20 @@ void MazeGenerator::createCorridors(int row, int column) {
 		int newColumn = 0;
 		direction = static_cast<Direction>(directions.at(i));
 			
-		if (direction == UP) {
-			newRow = -1;
-		}
-		else if (direction == DOWN) {
+		newRow = (direction == UP) ? -1 : newRow;
+		newRow = (direction == DOWN) ? 1 : newRow;
+		newColumn = (direction == LEFT) ? -1 : newColumn;
+		newColumn = (direction == RIGHT) ? 1 : newColumn;
 
-			newRow = 1;
-		}
-		else if (direction == LEFT) {
-		
-			newColumn = -1;
-		}
-		else if (direction == RIGHT) {
+		Positions checkPosition;
+		checkPosition.row = pos.row + (newRow * 2);
+		checkPosition.column = pos.column + (newColumn * 2);
 
-			newColumn = 1;
-		}
-		int x2 = row + (newRow * 2);
-		int y2 = column + (newColumn * 2);
-
-		if (x2 >=  1 && x2 < mapSize-1) {
-			if(y2 >= 1 && y2 < mapSize-1){
-				if (map[x2][y2] == 'x') {
-					map[x2 - newRow][y2 - newColumn] = ' ';
-					createCorridors(x2, y2);
+		if (checkPosition.row >=  1 && checkPosition.row < mapSize-1) {
+			if(checkPosition.column >= 1 && checkPosition.column < mapSize-1){
+				if (map[checkPosition.row][checkPosition.column] == 'x') {
+					map[checkPosition.row - newRow][checkPosition.column - newColumn] = ' ';
+					createCorridors(checkPosition);
 				}
 			}
 		}
@@ -358,96 +407,102 @@ void MazeGenerator::removeOuterWalls() {
 		}
 	}
 }
-bool MazeGenerator::isValidExit(int row, int column, Direction dir) {
+
+
+
+bool MazeGenerator::isValidExit(Positions pos, Direction dir) {
 	if (dir == UP) {
-		if (map[row+1][column] == ' ') {
+		if (map[pos.row+1][pos.column] == ' ') {
 			return true;
 		}
 	}
 	else if (dir == DOWN) {
-		if (map[row - 1][column] == ' ') {
+		if (map[pos.row - 1][pos.column] == ' ') {
 			return true;
 		}
 	}
 	else if (dir == LEFT) {
-		if (map[row][column+1] == ' ') {
+		if (map[pos.row][pos.column+1] == ' ') {
 			return true;
 		}
 	}
 	else if (dir == RIGHT) {
-		if (map[row][column-1] == ' ') {
+		if (map[pos.row][pos.column-1] == ' ') {
 			return true;
 		}
 	}
 	return false;
 }
-void MazeGenerator::createMaze() {
-	
-	int halfSize = mapSize / 2;
-	int row = rand() % halfSize + 1;
-	int column = rand() % halfSize + 1;
-
-	startingPosition;
-	startingPosition.row = (mapSize / 2) - 1;
-	startingPosition.column = (mapSize / 2) - 1;
-
-	createCorridors(row, column);
-	
-	//get rid of double wall if one exists
-	
-	removeOuterWalls();
 
 
-	//carve the central starting room
+
+void MazeGenerator::carveCentralRoom() {
 	for (int i = -2; i < 1; i++) {
 		for (int j = -2; j < 1; j++) {
 			map[(mapSize / 2) + i][(mapSize / 2) + j] = ' ';
 		}
 	}
-
 	map[startingPosition.row][startingPosition.column] = 'S';
+}
 
-	//assign exits
+
+
+void MazeGenerator::assignExits() {
 	int failCount = 0;
-	while (numExits >0) {
+	while (numExits > 0) {
 		enum Direction direction = static_cast<Direction>(rand() % 4);
 
-		int x;
-		int y;
 		int tempMazeSize = map.size() - 1;
+		Positions potentialExit;
 		if (direction == Direction::UP) {
-			x = 0;
-			y = rand() % tempMazeSize + 1;
-	
+			potentialExit.row = 0;
+			potentialExit.column = rand() % tempMazeSize + 1;
+
 		}
 		else if (direction == Direction::LEFT) {
-			x = rand() % map.size();
-			y = 0;
+			potentialExit.row = rand() % map.size();
+			potentialExit.column = 0;
 
 
 		}
 		else if (direction == Direction::RIGHT) {
-			y = tempMazeSize;
-			x = rand() % tempMazeSize + 1;
+			potentialExit.row = rand() % tempMazeSize + 1;
+			potentialExit.column = tempMazeSize;
 
 		}
 		else if (direction == Direction::DOWN) {
-			y = rand() % tempMazeSize + 1;
-			x = tempMazeSize;
+			potentialExit.row = tempMazeSize;
+			potentialExit.column = rand() % tempMazeSize + 1;
 
 		}
-		if (isValidExit(x, y, direction) && failCount < 50) {
-			map[x][y] = 'E';
+		if (isValidExit(potentialExit, direction) && failCount < 50) {
+			map[potentialExit.row][potentialExit.column] = 'E';
 			numExits--;
 
 			Positions newExit;
-			newExit.row = x;
-			newExit.column = y;
+			newExit.row = potentialExit.row;
+			newExit.column = potentialExit.column;
 			exits.push_back(newExit);
 		}
 		else {
 			failCount++;
 		}
 	}
+}
 
+void MazeGenerator::createMaze() {
+	
+	int halfSize = mapSize / 2;
+	Positions startPos;
+	startPos.row = rand() % halfSize + 1;
+	startPos.column = rand() % halfSize + 1;
+
+	startingPosition;
+	startingPosition.row = (mapSize / 2) - 1;
+	startingPosition.column = (mapSize / 2) - 1;
+
+	createCorridors(startPos);	
+	removeOuterWalls();
+	carveCentralRoom();
+	assignExits();
 }

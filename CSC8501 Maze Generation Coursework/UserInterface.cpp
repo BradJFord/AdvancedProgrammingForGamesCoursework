@@ -18,7 +18,7 @@ void printOptimalPaths(MazeGenerator* maze) {
 		if (option ==1) {
 			optionSelected = true;
 			for (int i = 0; i < maze->exits.size(); i++) {
-				maze->findShortestPath(maze->startingPosition.row, maze->startingPosition.column, maze->exits.at(i));
+				maze->findShortestPath(maze->startingPosition, maze->exits.at(i));
 			}
 			maze->printMaze();
 		}
@@ -32,6 +32,8 @@ void printOptimalPaths(MazeGenerator* maze) {
 		}
 	}
 }
+
+
 void saveMaze(MazeGenerator maze) {
 	int option = 0;
 	bool optionSelected = false;
@@ -57,23 +59,45 @@ void saveMaze(MazeGenerator maze) {
 		}
 	}
 }
+
+
 void generateRandomMaze() {
 	int mapSize;
 	int numExits;
-	cout << "Please enter a map size, (e.g. map size of 20 will result in 20x20 map)" << endl;
-	cin >> mapSize;
-	cout << "Please the amount of exits you would like." << endl;
-	cin >> numExits;
+	bool validSize = false;
+	while (!validSize) {
+		cout << "Please enter a map size, between 20 and 100 (e.g. map size of 20 will result in 20x20 map)" << endl;
+		cin >> mapSize;
 
+		if (mapSize <=100 && mapSize >=20) {
+			validSize = true;
+		}
+		else {
+			cout << "Please enter a valid maze size." << endl;
+		}
+	}
+	bool validExits = false;
+	while (!validExits) {
+		cout << "Please the amount of exits you would like. (15 exits max)" << endl;
+		cin >> numExits;
+
+		if (numExits >0 && numExits <=15) {
+			validExits = true;
+		}
+		else {
+			cout << "Please enter a valid number of exits." << endl;
+		}
+	}
 	MazeGenerator maze(mapSize, numExits);
 	maze.createMaze();
 	maze.printMaze();
-
 	printOptimalPaths(&maze);
 
 	saveMaze(maze);
 
 }
+
+
 void readMaze(MazeGenerator maze) {
 	bool validFile = false;
 	while (!validFile) {
