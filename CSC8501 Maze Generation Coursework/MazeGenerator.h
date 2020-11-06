@@ -54,8 +54,8 @@ public:
 	void removeOuterWalls();
 	bool isValidExit(int row, int column, Direction dir);
 	bool checkNeighbourTiles(int row, int column, Direction dir);
-	void saveMaze();
-	void readMazeFile(string filename);
+	void saveMaze(string filename);
+	bool readMazeFile(string filename);
 	vector<int> getNewDirection();
 
 	//returns nodes in every cardinal direction if they exist/are allowed to be used to create a path.

@@ -88,7 +88,7 @@ void MazeGenerator::createFinalPath(AStarNode* destinationNode) {
 		int row = finalVector.at(i).row;
 		int column = finalVector.at(i).column;
 		if (map[row][column] != 'E') {
-			this->map[row][column] = '-';
+			this->map[row][column] = 'o';
 		}
 	}
 }
@@ -155,12 +155,13 @@ void MazeGenerator::printMaze() {
 		}
 	}
 }
-void MazeGenerator::saveMaze() {
+void MazeGenerator::saveMaze(string filename) {
 	ofstream saveFile;
-	saveFile.open("mazeSave.txt");
+	saveFile.open(filename);
 	for (int i = 0; i < map.size(); i++) {
 		string line;
 		for (int j = 0; j < map[0].size();j++) {
+			map[i][j] = (map[i][j] == 'o') ? map[i][j] = ' ' : map[i][j];
 			line.push_back(map[i][j]);
 		}
 		saveFile << line << endl;
@@ -168,7 +169,7 @@ void MazeGenerator::saveMaze() {
 	saveFile.close();
 }
 
-void MazeGenerator::readMazeFile(string filename) {
+bool MazeGenerator::readMazeFile(string filename) {
 	int exitCount = 0;
 	ifstream inFile(filename);
 	string line;
@@ -197,10 +198,12 @@ void MazeGenerator::readMazeFile(string filename) {
 			lineNumber++;
 		}
 		inFile.close();
+		return true;
 	}
 	else {
 		{
 			cout << "Unable to Open file" << endl;
+			return false;
 		}
 	}
 	this->numExits = exitCount;
