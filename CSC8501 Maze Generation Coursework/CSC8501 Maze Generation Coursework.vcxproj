@@ -30,6 +30,7 @@
     <ProjectGuid>{0B262CE1-D702-43A8-8D42-6EC7ECB1C191}</ProjectGuid>
     <RootNamespace>CSC8501MazeGenerationCoursework</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>CSC8501 Maze Generation Coursework 1</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
