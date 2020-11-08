@@ -592,6 +592,55 @@ void MazeGenerator::movePlayers() {
 
 }
 
+
+bool MazeGenerator::readPlayerProgress(string filename) {
+	int exitCount = 0;
+	ifstream inFile(filename);
+	string line;
+	if (inFile.is_open()) {
+		int lineNumber = 0;
+		while (getline(inFile, line)) {
+			if (line[0] == '-') {
+				playerProgressMap.push_back(map);
+				lineNumber = 0;
+				getline(inFile,line);
+			}
+			if (this->mapSize <= 0) {
+				this->mapSize = line.size();
+				map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
+			}
+			for (int i = 0; i < line.size(); i++) {
+				map[lineNumber][i] = line[i];
+				if (playerProgressMap.size()<=0) {
+					if (map[lineNumber][i] == 'E') {
+						exitCount++;
+
+						Positions newExit;
+						newExit.row = lineNumber;
+						newExit.column = i;
+						exits.push_back(newExit);
+					}
+					else if (map[lineNumber][i] == 'F') {
+						this->finishPosition.row = lineNumber;
+						this->finishPosition.column = i;
+					}
+				}
+			}
+			lineNumber++;
+		}
+		inFile.close();
+		return true;
+	}
+	else {
+		{
+			cout << "Unable to Open file" << endl;
+			return false;
+		}
+	}
+	this->numExits = exitCount;
+}
+
+
 void MazeGenerator::savePlayerProgress(string filename) {
 	ofstream saveFile;
 	saveFile.open(filename);
@@ -604,7 +653,7 @@ void MazeGenerator::savePlayerProgress(string filename) {
 			}
 			saveFile << line << endl;
 		}
-		saveFile << endl;
+		saveFile<< "---" << endl;
 	}
 	saveFile.close();
 }

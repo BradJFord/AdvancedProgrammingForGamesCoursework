@@ -97,6 +97,7 @@ public:
 	bool finishingMove(Player player);
 	void printPlayerProgress();
 	void savePlayerProgress(string filename);
+	bool readPlayerProgress(string filename);
 
 
 	vector< vector<char>> map;

@@ -136,6 +136,44 @@ void readMaze(MazeGenerator maze) {
 		}
 	}
 }
+void readPlayerProgressFile() {
+	MazeGenerator maze;
+	bool validFile = false;
+	while (!validFile) {
+		cout << "Please enter the player progress file you would like to read (without '.txt')" << endl;
+		cout << "" << endl;
+		string filename;
+		cin >> filename;
+		if (!maze.readPlayerProgress(filename + ".txt")) {
+			int option = 0;
+			bool optionSelected = false;
+			while (!optionSelected) {
+				cout << "1. Enter file name again." << endl;
+				cout << "2. Exit back to main menu" << endl;
+				cin >> option;
+
+				if (option == 1) {
+					optionSelected = true;
+				}
+				else if (option == 2) {
+					validFile = true;
+					optionSelected = true;
+				}
+				else {
+					cout << "Please enter a valid option." << endl;
+					cout << '/n' << endl;
+				}
+
+			}
+		}
+		else {
+			validFile = true;
+			maze.printPlayerProgress();
+		}
+	}
+	
+}
+
 int main() {
 	srand(time(NULL));
 	bool endFlag = false;
@@ -145,7 +183,8 @@ int main() {
 			int option;
 			cout << "1. Randomly Generate Maze" << endl;
 			cout << "2. Read Maze From File" << endl;
-			cout << "3. Exit" << endl;
+			cout << "3. Read And Print Player Progress From File" << endl;
+			cout << "4. Exit" << endl;
 
 			cin >> option;
 
@@ -159,6 +198,11 @@ int main() {
 				readMaze(maze);
 			}
 			else if (option == 3) {
+				optionSelected = true;
+				readPlayerProgressFile();
+
+			}
+			else if (option == 4) {
 				endFlag = true;
 				optionSelected = true;
 			}
