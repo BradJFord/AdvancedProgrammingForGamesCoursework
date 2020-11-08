@@ -139,10 +139,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MazeGenerator.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="UserInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MazeGenerator.h" />
+    <ClInclude Include="Player.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

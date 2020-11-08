@@ -23,7 +23,12 @@ public:
 	struct Positions {
 		int row;
 		int column;
+
+
+		//only used to determine which side of the maze an exit/entrance is on.
+		Direction exitDirection;
 	};
+
 	struct AStarNode {
 		int g; //number of steps from point starting position to current position.
 		int h; // number of steps from current position to destination.
@@ -36,15 +41,27 @@ public:
 		int f; //sum of g and h
 	};
 
+	struct Player {
+		Positions pos;
+		vector<AStarNode> path;
+
+		int stationaryTurns;
+
+	};
+
+
 	MazeGenerator() {
 		this->mapSize = 0;
 		this->numExits = 0;
+		this->numPlayers = 0;
 		this->map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
 	}
-	MazeGenerator(int mapSize, int numExits) {
+
+	MazeGenerator(int mapSize, int numExits, int numPlayers) {
 		this->map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
 		this->mapSize = mapSize;
 		this->numExits = numExits;
+		this->numPlayers = numPlayers;
 	}
 
 	void printMaze();
@@ -59,24 +76,41 @@ public:
 	bool readMazeFile(string filename);
 	vector<int> getNewDirection();
 
-	//returns nodes in every cardinal direction if they exist/are allowed to be used to create a path.
+	
 	vector<AStarNode*> getAdjacentNodes(AStarNode* node, Positions destination);
 	int distanceToDestination(Positions currentPosition, Positions destination);
 	AStarNode* initialiseNode(Positions pos, Positions destination, AStarNode* parentNode);
-	void findShortestPath(Positions pos, Positions exit);
+	vector<AStarNode> findShortestPath(Positions pos, Positions exit);
 	AStarNode* findSmallestFValue(vector<AStarNode*> evaluationList);
 	bool containsPosition(vector<AStarNode*> closedList, Positions destinaion);
-	void createFinalPath(AStarNode* destinationNode);
+	vector<AStarNode> createFinalPath(AStarNode* destinationNode);
 	AStarNode* initialiseStartingNode(Positions pos, Positions exit);
 	void eraseListPointers(vector<AStarNode*> evaluationList, vector<AStarNode*> closedPath);
+	void writeOptimalPathToMap(vector<AStarNode> path);
+
+
+	void createPlayers();
+	void drawPlayers();
+	void movePlayers();
+	void playerManager();
+	bool validMove(Player player);
+	bool finishingMove(Player player);
+	void printPlayerProgress();
+	void savePlayerProgress(string filename);
+
 
 	vector< vector<char>> map;
+	vector<vector<vector<char>>> playerProgressMap;
 	vector<Positions> exits;
+	vector<Player> players;
+	vector<int> playerFinishingTurn;
 	int mapSize;
 	int numExits;
+	int numPlayers;
+	int turnCounter = 0;
 	enum Direction direction;
 
-	Positions startingPosition;
+	Positions finishPosition;
 
 };
 
