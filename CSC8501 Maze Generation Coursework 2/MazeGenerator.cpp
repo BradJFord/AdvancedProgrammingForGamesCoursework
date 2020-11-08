@@ -505,7 +505,7 @@ void MazeGenerator::assignExits() {
 	}
 }
 
-void MazeGenerator::createMaze() {
+void MazeGenerator::createMaze(bool createPlayerList) {
 
 	int halfSize = mapSize / 2;
 	Positions startPos;
@@ -520,7 +520,10 @@ void MazeGenerator::createMaze() {
 	removeOuterWalls();
 	carveCentralRoom();
 	assignExits();
-	playerManager();
+	if (createPlayerList) {
+		createPlayers();
+	}
+	//playerManager();
 }
 
 void MazeGenerator::createPlayers() {
@@ -657,6 +660,8 @@ void MazeGenerator::savePlayerProgress(string filename) {
 	}
 	saveFile.close();
 }
+
+
 void MazeGenerator::printPlayerProgress() {
 	vector<int> finishTurns = playerFinishingTurn;
 	int finishedPlayerCount = 0;
@@ -685,7 +690,10 @@ void MazeGenerator::printPlayerProgress() {
 	}
 }
 void MazeGenerator::playerManager() {
-	createPlayers();
+	
+	if (players.size()<=0) {
+		createPlayers();
+	}
 	for (int i = 0; i < players.size();i++) {
 		players.at(i).path = findShortestPath(players.at(i).pos,finishPosition);
 		playerProgressMap.push_back(map);

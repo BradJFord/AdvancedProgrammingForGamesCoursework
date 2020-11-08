@@ -65,7 +65,7 @@ public:
 	}
 
 	void printMaze();
-	void createMaze();
+	void createMaze(bool createPlayerList);
 	void createCorridors(Positions pos);
 	void removeOuterWalls();
 	bool isValidExit(Positions exit, Direction dir);
