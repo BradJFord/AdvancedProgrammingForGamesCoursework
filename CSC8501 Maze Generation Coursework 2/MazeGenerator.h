@@ -45,8 +45,15 @@ public:
 		Positions pos;
 		vector<AStarNode> path;
 
-		int stationaryTurns;
+		bool deadlocked = false;
 
+		int stationaryTurns = 0;
+
+	};
+	struct MazeResults {
+		int fullyCompleteableCount = 0;
+		int partialCompleteableCount = 0;
+		int deadlockCount = 0;
 	};
 
 
@@ -75,6 +82,7 @@ public:
 	void assignExits();
 	bool readMazeFile(string filename);
 	vector<int> getNewDirection();
+	Direction determineExitDirection(Positions pos);
 
 	
 	vector<AStarNode*> getAdjacentNodes(AStarNode* node, Positions destination);
@@ -90,7 +98,6 @@ public:
 
 
 	void createPlayers();
-	void drawPlayers();
 	void movePlayers();
 	void playerManager();
 	bool validMove(Player player);
@@ -98,6 +105,8 @@ public:
 	void printPlayerProgress();
 	void savePlayerProgress(string filename);
 	bool readPlayerProgress(string filename);
+	void deletePlayers();
+	MazeResults hundredMazeGeneration(bool printAllMazes);
 
 
 	vector< vector<char>> map;
@@ -109,6 +118,10 @@ public:
 	int numExits;
 	int numPlayers;
 	int turnCounter = 0;
+	int deadlockedPlayers = 0;
+	int finishedPlayers = 0;
+	bool hundredMazes = false;
+	MazeResults hundredMazeResults;
 	enum Direction direction;
 
 	Positions finishPosition;

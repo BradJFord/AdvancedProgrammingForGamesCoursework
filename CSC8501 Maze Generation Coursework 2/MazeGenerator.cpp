@@ -111,7 +111,7 @@ void MazeGenerator::writeOptimalPathToMap(vector<AStarNode> path) {
 }
 
 
-//change this to incorporate player movements
+
 vector<MazeGenerator::AStarNode> MazeGenerator::createFinalPath(AStarNode* destinationNode) {
 	vector<AStarNode> flippedVector;
 	AStarNode* currentNode = destinationNode;
@@ -229,10 +229,33 @@ void MazeGenerator::saveMaze(string filename) {
 	saveFile.close();
 }
 
+void MazeGenerator::deletePlayers() {
+	while (players.size() >0) {
+		Player currentPlayer = players.at(0);
+		map[currentPlayer.pos.row][currentPlayer.pos.column] = ' ';
+		players.erase(players.begin());
 
+	}
+}
+
+MazeGenerator::Direction MazeGenerator::determineExitDirection(Positions pos) {
+	if (pos.row == 0) {
+		return UP;
+	}
+	else if (pos.row == mapSize - 1) {
+		return DOWN;
+	}
+	else if (pos.column == 0) {
+		return LEFT;
+	}
+	else if (pos.column == mapSize - 1) {
+		return RIGHT;
+	}
+}
 
 bool MazeGenerator::readMazeFile(string filename) {
 	int exitCount = 0;
+	int playerCounter = 0;
 	ifstream inFile(filename);
 	string line;
 	if (inFile.is_open()) {
@@ -250,11 +273,19 @@ bool MazeGenerator::readMazeFile(string filename) {
 					Positions newExit;
 					newExit.row = lineNumber;
 					newExit.column = i;
+					newExit.exitDirection = determineExitDirection(newExit);
 					exits.push_back(newExit);
 				}
 				else if (map[lineNumber][i] == 'F') {
 					this->finishPosition.row = lineNumber;
 					this->finishPosition.column = i;
+				}
+				else if (map[lineNumber][i] == 'P') {
+					Player newPlayer;
+					newPlayer.pos.row = lineNumber;
+					newPlayer.pos.column = i;
+					players.push_back(newPlayer);
+					playerCounter++;
 				}
 			}
 			lineNumber++;
@@ -268,6 +299,7 @@ bool MazeGenerator::readMazeFile(string filename) {
 			return false;
 		}
 	}
+	this->numPlayers = playerCounter;
 	this->numExits = exitCount;
 }
 
@@ -523,7 +555,6 @@ void MazeGenerator::createMaze(bool createPlayerList) {
 	if (createPlayerList) {
 		createPlayers();
 	}
-	//playerManager();
 }
 
 void MazeGenerator::createPlayers() {
@@ -554,15 +585,18 @@ void MazeGenerator::createPlayers() {
 
 
 bool MazeGenerator::validMove(Player player) {
-	Positions nextPlayerPos = player.path.at(0).pos;
-	if (map[nextPlayerPos.row][nextPlayerPos.column] != 'P' || map[nextPlayerPos.row][nextPlayerPos.column] != 'x') {
-		return true;
+	if (player.path.size()>0) {
+		Positions nextPlayerPos = player.path.at(0).pos;
+		if (map[nextPlayerPos.row][nextPlayerPos.column] != 'P' || map[nextPlayerPos.row][nextPlayerPos.column] != 'x') {
+			return true;
+		}
 	}
 	return false;
 }
 bool MazeGenerator::finishingMove(Player player) {
 	Positions nextPlayerPos = player.path.at(0).pos;
 	if (map[nextPlayerPos.row][nextPlayerPos.column] == 'F') {
+		finishedPlayers++;
 		return true;
 	}
 	return false;
@@ -571,7 +605,7 @@ bool MazeGenerator::finishingMove(Player player) {
 
 void MazeGenerator::movePlayers() {
 	for (int i = 0; i < players.size(); i++) {
-		if (validMove(players.at(i))) {
+		if (players.at(i).deadlocked == false && validMove(players.at(i))) {
 			if (!finishingMove(players.at(i))) {
 				players.at(i).stationaryTurns = 0;
 				map[players.at(i).pos.row][players.at(i).pos.column] = ' ';
@@ -586,9 +620,31 @@ void MazeGenerator::movePlayers() {
 			}
 		}
 		else {
-			players.at(i).stationaryTurns++;
-			if (players.at(i).stationaryTurns >= 3) {
-				players.at(i).path = findShortestPath(players.at(i).pos,finishPosition);
+			if (deadlockedPlayers>=players.size() && finishedPlayers <=0) {
+				cout << endl;
+				if (!hundredMazes) {
+					cout << "Deadlock has occured. Program will end." << endl;
+				}
+				hundredMazeResults.deadlockCount++;
+				players.clear();
+			}else if (deadlockedPlayers >= players.size() && finishedPlayers >= 0) {
+				cout << endl;
+				if (!hundredMazes) {
+					cout << "Maze is partially completeable." << endl;
+				}
+				hundredMazeResults.partialCompleteableCount++;
+				players.clear();
+			}
+		
+			if (players.size()>0) {
+				players.at(i).stationaryTurns++;
+				if (players.at(i).stationaryTurns >= 50) {
+					deadlockedPlayers++;
+					players.at(i).deadlocked = true;
+				}
+				else if (players.at(i).stationaryTurns >= 3) {
+					players.at(i).path = findShortestPath(players.at(i).pos, finishPosition);
+				}
 			}
 		}
 	}
@@ -703,5 +759,29 @@ void MazeGenerator::playerManager() {
 		turnCounter++;
 		playerProgressMap.push_back(map);
 	}
+	if (deadlockedPlayers <=0 && finishedPlayers >0) {
+		if (!hundredMazes) {
+			cout << "Maze is completeable" << endl;
+		}
+		hundredMazeResults.fullyCompleteableCount++;
+	}
+}
+MazeGenerator::MazeResults MazeGenerator::hundredMazeGeneration(bool printAllMazes) {
+	int numPlayersCopy = numPlayers;
+	int numExitsCopy = numExits;
+	hundredMazes = true;
+	for (int i = 0; i < 100; i++) {
 
+		exits.clear();
+		map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
+		playerProgressMap.clear();
+		numPlayers = numPlayersCopy;
+		numExits = numExitsCopy;
+		createMaze(true);
+		if (printAllMazes) {
+			printMaze();
+		}
+		playerManager();
+	}
+	return hundredMazeResults;
 }

@@ -5,6 +5,32 @@
 
 using namespace std;
 
+
+void printProgress(MazeGenerator maze);
+
+bool playGame(MazeGenerator maze) {
+	int option;
+	bool validOption = false;
+	while (!validOption) {
+		cout << "Would you like the players to play the game?" << endl;
+		cout << "1.Yes" << endl;
+		cout << "2.No" << endl;
+		cin >> option;
+
+		if (option == 1) {
+			validOption = true;
+			return true;
+		}
+		else if (option == 2) {
+			validOption = true;
+			return false;
+		}
+		else {
+			cout << "Please enter a valid option" << endl;
+		}
+	}
+}
+
 bool printOptimalPaths(MazeGenerator* maze, bool playerFlag) {
 	bool optionSelected = false;
 	bool printedPath = false;
@@ -48,7 +74,7 @@ bool printOptimalPaths(MazeGenerator* maze, bool playerFlag) {
 		if (option == 1) {
 			optionSelected = true;
 			for (int i = 0; i < maze->exits.size(); i++) {
-				maze->writeOptimalPathToMap(maze->findShortestPath(maze->exits.at(i), maze->finishPosition));
+				maze->writeOptimalPathToMap(maze->findShortestPath(maze->finishPosition, maze->exits.at(i)));
 			}
 			maze->printMaze();
 		}
@@ -117,9 +143,9 @@ bool generatePlayersOrNot() {
 
 MazeGenerator generateRandomMaze() {
 	int mapSize;
-	int numExitsPlayers;
+	int numExitsPlayers = 0;
 	int option;
-	int numExits;
+	int numExits = 0;
 	int numPlayers;
 	bool validSize = false;
 	bool playerFlag = false;
@@ -137,7 +163,6 @@ MazeGenerator generateRandomMaze() {
 	
 	playerFlag = generatePlayersOrNot();
 
-	//yes players
 	if (playerFlag) {
 		bool validExitPlayers = false;
 		while (!validExitPlayers) {
@@ -152,9 +177,7 @@ MazeGenerator generateRandomMaze() {
 				cout << "Please enter a valid number of exits/players." << endl;
 			}
 		}
-	}
-
-	//no players
+	} 
 	else {
 		bool validExit = false;
 		while (!validExit) {
@@ -172,13 +195,38 @@ MazeGenerator generateRandomMaze() {
 	MazeGenerator maze(mapSize, numExits, numExitsPlayers);
 	maze.createMaze(playerFlag);
 	maze.printMaze();
-	if (!printOptimalPaths(&maze, playerFlag)){
+	
+	MazeGenerator mazeCopy = maze;
+
+	if (!printOptimalPaths(&mazeCopy, playerFlag)){
 		saveMaze(maze);
 	}
 
 	return maze;
 }
 
+void playersDetected(MazeGenerator maze) {
+	int option;
+	bool validOption = false;
+	while (!validOption) {
+		cout << "There were players detected in the file. Would you like to keep them or generate new players?" << endl;
+		cout << "1.Generate new players" << endl;
+		cout << "2.Keep current players" << endl;
+		cin >> option;
+
+		if (option == 1) {
+			validOption = true;
+			maze.deletePlayers();
+			maze.createPlayers();
+		}
+		else if (option == 2) {
+			validOption = true;
+		}
+		else {
+			cout << "Please enter a valid option." << endl;
+		}
+	}
+}
 
 void readMaze(MazeGenerator maze) {
 	bool validFile = false;
@@ -211,11 +259,18 @@ void readMaze(MazeGenerator maze) {
 		}
 		else {
 			validFile = true;
+			if (maze.players.size()>0) {
+				playersDetected(maze);
+
+			}
 			maze.printMaze();
 
+			MazeGenerator mazeCopy = maze;
 
-			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			printOptimalPaths(&maze, false);
+			if (playGame(maze)) {
+				maze.playerManager();
+				printProgress(maze);
+			}
 		}
 	}
 }
@@ -256,28 +311,6 @@ void readPlayerProgressFile() {
 	}
 	
 }
-bool playGame(MazeGenerator maze) {
-	int option;
-	bool validOption = false;
-	while (!validOption) {
-		cout << "Would you like the players to play the game?" << endl;
-		cout << "1.Yes" << endl;
-		cout << "2.No" << endl;
-		cin >> option;
-
-		if (option == 1) {
-			validOption = true;
-			return true;
-		}
-		else if (option == 2) {
-			validOption = true;
-			return false;
-		}
-		else {
-			cout << "Please enter a valid option" << endl;
-		}
-	}
-}
 
 void saveProgress(MazeGenerator maze) {
 	int option;
@@ -291,9 +324,9 @@ void saveProgress(MazeGenerator maze) {
 
 		if (option == 1) {
 			validOption = true;
-			cout << "Please enter the name of the file you would like to save. (without '.txt')";
+			cout << "Please enter the name of the file you would like to save. (without '.txt')" << endl;
 			cin >> filename;
-			maze.savePlayerProgress("beans.txt");
+			maze.savePlayerProgress(filename+".txt");
 		}
 		else if (option == 2) {
 			validOption = true;
@@ -326,6 +359,102 @@ void printProgress(MazeGenerator maze) {
 	}
 	
 }
+void displayInformation(vector<MazeGenerator::MazeResults> results, int firstMapSize, int lastMapSize, int firstNumExitsPlayers, int secondNumExitsPlayers) {
+	int copyPlayerExit = firstNumExitsPlayers;
+	for (int i = 0; i < results.size(); i++) {
+		for (int j = firstNumExitsPlayers; j < secondNumExitsPlayers; j++) {
+			cout << "Results for 100 Mazes of Size " << firstMapSize << " with " << j << " players." << endl;
+			cout << "Completeable Mazes: " << results.at(i).fullyCompleteableCount << " Partially Completeable: " << results.at(i).partialCompleteableCount << " Deadlock Count: " << results.at(i).deadlockCount << endl;
+		}
+		firstNumExitsPlayers = copyPlayerExit;
+	}
+}
+
+
+void generateOneHundredMazes() {
+	int firstMapSize = 0;
+	int lastMapSize = 0;
+	int firstNumExitsPlayers = 0;
+	int secondNumExitsPlayers = 0;
+	int option;
+	bool firstValidSize = false;
+	bool secondValidSize = false;
+	while (!firstValidSize) {
+		cout << "Please enter a starting map size, between 20 and 100 (e.g. map size of 20 will result in 20x20 map)" << endl;
+		cin >> firstMapSize;
+
+		if (firstMapSize <= 100 && firstMapSize >= 20) {
+			firstValidSize = true;
+		}
+		else {
+			cout << "Please enter a valid maze size." << endl;
+		}
+	}
+	while (!secondValidSize) {
+		cout << "Please enter a final map size, between the previous value entered and 100 (e.g. map size of 20 will result in 20x20 map)" << endl;
+		cin >> lastMapSize;
+
+		if (lastMapSize <= 100 && lastMapSize > firstMapSize) {
+			secondValidSize = true;
+		}
+		else {
+			cout << "Please enter a valid maze size." << endl;
+		}
+	}
+
+	bool validExitPlayers = false;
+	while (!validExitPlayers) {
+		cout << "Please the starting amount of exits and players you would like. (15 exits max)" << endl;
+		cin >> firstNumExitsPlayers;
+
+		if (firstNumExitsPlayers > 0 && firstNumExitsPlayers <= 15) {
+			validExitPlayers = true;
+		}
+		else {
+			cout << "Please enter a valid number of exits/players." << endl;
+		}
+	}
+	validExitPlayers = false;
+	while (!validExitPlayers) {
+		cout << "Please the amount of exits and players you would like. (more than the value enterred previously and <=15)" << endl;
+		cin >> secondNumExitsPlayers;
+
+		if (secondNumExitsPlayers > firstNumExitsPlayers && secondNumExitsPlayers <= 15) {
+			validExitPlayers = true;
+		}
+		else {
+			cout << "Please enter a valid number of exits/players." << endl;
+		}
+	}
+	bool validOption = false;
+	option = 0;
+	bool printAllMazes = false;
+	while (!validOption) {
+		cout << "Would you like to print every maze generated. (THIS CAN TAKE A CONSIDERABLE AMOUNT OF TIME)" << endl;
+		cout << "1.Yes" << endl;
+		cout << "2.No" << endl;
+		cin >> option;
+
+		if (option ==1) {
+			validOption = true;
+			printAllMazes = true;
+		}
+		else if (option ==2) {
+			validOption = true;
+		}
+		else {
+			cout << "Please enter a valid number of exits/players." << endl;
+		}
+	}
+	vector<MazeGenerator::MazeResults> results;
+	for (int i = firstMapSize; i < lastMapSize; i++) {
+		for (int j = firstNumExitsPlayers; j < secondNumExitsPlayers;j++) {
+			MazeGenerator maze(i, j, j);
+			results.push_back(maze.hundredMazeGeneration(printAllMazes));
+			displayInformation(results,firstMapSize,lastMapSize,firstNumExitsPlayers,secondNumExitsPlayers);
+		}
+	}
+}
 
 int main() {
 	srand(time(NULL));
@@ -337,17 +466,21 @@ int main() {
 			cout << "1. Randomly Generate Maze" << endl;
 			cout << "2. Read Maze From File" << endl;
 			cout << "3. Read And Print Player Progress From File" << endl;
-			cout << "4. Exit" << endl;
+			cout << "4. Generate 100 mazes in a size range" << endl;
+			cout << "5. Exit" << endl;
 
 			cin >> option;
 
 			if (option == 1) {
 				optionSelected = true;
 				MazeGenerator maze = generateRandomMaze();
-				
-				if (playGame(maze)) {
-					maze.playerManager();
-					printProgress(maze);
+
+				if (maze.players.size() >0) {
+
+					if (playGame(maze)) {
+						maze.playerManager();
+						printProgress(maze);
+					}
 				}
 			}
 			else if (option == 2) {
@@ -361,6 +494,10 @@ int main() {
 
 			}
 			else if (option == 4) {
+				optionSelected = true;
+				generateOneHundredMazes();
+			}
+			else if (option == 5) {
 				endFlag = true;
 				optionSelected = true;
 			}
