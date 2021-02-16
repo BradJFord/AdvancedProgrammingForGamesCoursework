@@ -2,10 +2,12 @@
 #include <iostream>
 #include <time.h>
 #include <string>
+#include "UserInterface.h"
+#include "Pathfinding.h"
 
 using namespace std;
 
-void printOptimalPaths(MazeGenerator* maze) {
+void UserInterface::printOptimalPaths() {
 	bool optionSelected = false;
 	while (!optionSelected) {
 		int option;
@@ -17,10 +19,11 @@ void printOptimalPaths(MazeGenerator* maze) {
 
 		if (option ==1) {
 			optionSelected = true;
-			for (int i = 0; i < maze->exits.size(); i++) {
-				maze->findShortestPath(maze->startingPosition, maze->exits.at(i));
+			Pathfinding path(maze.map,maze.mapSize);
+			for (int i = 0; i < maze.exits.size(); i++) {
+				path.findShortestPath(maze.startingPosition, maze.exits.at(i));
 			}
-			maze->printMaze();
+			maze.printMaze();
 		}
 		else if (option == 2) {
 			optionSelected = true;
@@ -34,7 +37,7 @@ void printOptimalPaths(MazeGenerator* maze) {
 }
 
 
-void saveMaze(MazeGenerator maze) {
+void UserInterface::saveMaze() {
 	int option = 0;
 	bool optionSelected = false;
 	while (!optionSelected) {
@@ -61,7 +64,7 @@ void saveMaze(MazeGenerator maze) {
 }
 
 
-void generateRandomMaze() {
+void UserInterface::generateRandomMaze() {
 	int mapSize;
 	int numExits;
 	bool validSize = false;
@@ -88,17 +91,17 @@ void generateRandomMaze() {
 			cout << "Please enter a valid number of exits." << endl;
 		}
 	}
-	MazeGenerator maze(mapSize, numExits);
+	maze = MazeGenerator(mapSize, numExits);
 	maze.createMaze();
 	maze.printMaze();
-	printOptimalPaths(&maze);
+	printOptimalPaths();
 
-	saveMaze(maze);
+	saveMaze();
 
 }
 
 
-void readMaze(MazeGenerator maze) {
+void UserInterface::readMaze() {
 	bool validFile = false;
 	while (!validFile) {
 		cout << "Please enter the file you would like to read (without '.txt')" << endl;
@@ -130,42 +133,7 @@ void readMaze(MazeGenerator maze) {
 		else {
 			validFile = true;
 			maze.printMaze();
-			printOptimalPaths(&maze);
+			printOptimalPaths();
 		}
 	}
-}
-int main() {
-	srand(time(NULL));
-	bool endFlag = false;
-	while (!endFlag) {
-		bool optionSelected = false;
-		while (!optionSelected) {
-			int option;
-			cout << "1. Randomly Generate Maze" << endl;
-			cout << "2. Read Maze From File" << endl;
-			cout << "3. Exit" << endl;
-
-			cin >> option;
-
-			if (option == 1) {
-				optionSelected = true;
-				generateRandomMaze();
-			}
-			else if (option == 2) {
-				optionSelected = true;
-				MazeGenerator maze;
-				readMaze(maze);
-			}
-			else if (option == 3) {
-				endFlag = true;
-				optionSelected = true;
-			}
-			else {
-				cout << "Please enter a valid option." << endl;
-				cout << '/n' << endl;
-			}
-
-		}
-	}
-	return 0;
 }
