@@ -1,14 +1,7 @@
-#include "MazeGenerator.h"
-#include <iostream>
-#include <time.h>
-#include <string>
-
+#include "UserInterface.h"
 using namespace std;
 
-
-void printProgress(MazeGenerator maze);
-
-bool playGame(MazeGenerator maze) {
+bool UserInterface::playGame() {
 	int option;
 	bool validOption = false;
 	while (!validOption) {
@@ -31,10 +24,9 @@ bool playGame(MazeGenerator maze) {
 	}
 }
 
-bool printOptimalPaths(MazeGenerator* maze, bool playerFlag) {
+bool UserInterface::printOptimalPaths(bool playerFlag) {
 	bool optionSelected = false;
 	bool printedPath = false;
-	
 	if (playerFlag) {
 		while (!optionSelected) {
 			int option;
@@ -46,8 +38,9 @@ bool printOptimalPaths(MazeGenerator* maze, bool playerFlag) {
 
 			if (option == 1) {
 				optionSelected = true;
+				Pathfinding path(maze->map, maze->mapSize);
 				for (int i = 0; i < maze->players.size(); i++) {
-					maze->writeOptimalPathToMap(maze->findShortestPath(maze->players.at(i).pos, maze->finishPosition));
+					maze->writeOptimalPathToMap(path.findShortestPath(maze->players.at(i).pos, maze->finishPosition));
 				}
 				maze->printMaze();
 				printedPath = true;
@@ -73,8 +66,9 @@ bool printOptimalPaths(MazeGenerator* maze, bool playerFlag) {
 
 		if (option == 1) {
 			optionSelected = true;
+			Pathfinding path(maze->map, maze->mapSize);
 			for (int i = 0; i < maze->exits.size(); i++) {
-				maze->writeOptimalPathToMap(maze->findShortestPath(maze->finishPosition, maze->exits.at(i)));
+				maze->writeOptimalPathToMap(path.findShortestPath(maze->finishPosition, maze->exits.at(i)));
 			}
 			maze->printMaze();
 		}
@@ -91,7 +85,7 @@ bool printOptimalPaths(MazeGenerator* maze, bool playerFlag) {
 }
 
 
-void saveMaze(MazeGenerator maze) {
+void UserInterface::saveMaze() {
 	int option = 0;
 	bool optionSelected = false;
 	while (!optionSelected) {
@@ -104,7 +98,7 @@ void saveMaze(MazeGenerator maze) {
 			string filename;
 			cout << "Please enter a name for your file (without '.txt')" << endl;
 			cin >> filename;
-			maze.saveMaze(filename + ".txt");
+			maze->saveMaze(filename + ".txt");
 			optionSelected = true;
 		}
 		else if (option == 2) {
@@ -118,7 +112,7 @@ void saveMaze(MazeGenerator maze) {
 }
 
 
-bool generatePlayersOrNot() {
+bool UserInterface::generatePlayersOrNot() {
 	int option;
 	bool validOption = false;
 	while (!validOption) {
@@ -141,7 +135,7 @@ bool generatePlayersOrNot() {
 	}
 }
 
-MazeGenerator generateRandomMaze() {
+MazeGenerator UserInterface::generateRandomMaze() {
 	int mapSize;
 	int numExitsPlayers = 0;
 	int option;
@@ -192,20 +186,19 @@ MazeGenerator generateRandomMaze() {
 			}
 		}
 	}
-	MazeGenerator maze(mapSize, numExits, numExitsPlayers);
-	maze.createMaze(playerFlag);
-	maze.printMaze();
+	maze = new MazeGenerator(mapSize, numExits, numExitsPlayers);
+	maze->createMaze(playerFlag);
+	maze->printMaze();
 	
-	MazeGenerator mazeCopy = maze;
 
-	if (!printOptimalPaths(&mazeCopy, playerFlag)){
-		saveMaze(maze);
+	if (!printOptimalPaths(playerFlag)){
+		saveMaze();
 	}
 
-	return maze;
+	return *maze;
 }
 
-void playersDetected(MazeGenerator maze) {
+void UserInterface::playersDetected() {
 	int option;
 	bool validOption = false;
 	while (!validOption) {
@@ -216,8 +209,8 @@ void playersDetected(MazeGenerator maze) {
 
 		if (option == 1) {
 			validOption = true;
-			maze.deletePlayers();
-			maze.createPlayers();
+			maze->deletePlayers();
+			maze->createPlayers();
 		}
 		else if (option == 2) {
 			validOption = true;
@@ -228,14 +221,14 @@ void playersDetected(MazeGenerator maze) {
 	}
 }
 
-void readMaze(MazeGenerator maze) {
+void UserInterface::readMaze() {
 	bool validFile = false;
 	while (!validFile) {
 		cout << "Please enter the file you would like to read (without '.txt')" << endl;
 		cout << "" << endl;
 		string filename;
 		cin >> filename;
-		if (!maze.readMazeFile(filename + ".txt")) {
+		if (!maze->readMazeFile(filename + ".txt")) {
 			int option = 0;
 			bool optionSelected = false;
 			while (!optionSelected) {
@@ -259,22 +252,22 @@ void readMaze(MazeGenerator maze) {
 		}
 		else {
 			validFile = true;
-			if (maze.players.size()>0) {
-				playersDetected(maze);
+			if (maze->players.size()>0) {
+				playersDetected();
 
 			}
-			maze.printMaze();
+			maze->printMaze();
 
-			MazeGenerator mazeCopy = maze;
+			MazeGenerator mazeCopy = getMaze();
 
-			if (playGame(maze)) {
-				maze.playerManager();
-				printProgress(maze);
+			if (playGame()) {
+				maze->playerManager();
+				printProgress();
 			}
 		}
 	}
 }
-void readPlayerProgressFile() {
+void UserInterface::readPlayerProgressFile() {
 	MazeGenerator maze;
 	bool validFile = false;
 	while (!validFile) {
@@ -312,7 +305,7 @@ void readPlayerProgressFile() {
 	
 }
 
-void saveProgress(MazeGenerator maze) {
+void UserInterface::saveProgress() {
 	int option;
 	bool validOption = false;
 	string filename;
@@ -326,7 +319,7 @@ void saveProgress(MazeGenerator maze) {
 			validOption = true;
 			cout << "Please enter the name of the file you would like to save. (without '.txt')" << endl;
 			cin >> filename;
-			maze.savePlayerProgress(filename+".txt");
+			maze->savePlayerProgress(filename+".txt");
 		}
 		else if (option == 2) {
 			validOption = true;
@@ -336,7 +329,7 @@ void saveProgress(MazeGenerator maze) {
 		}
 	}
 }
-void printProgress(MazeGenerator maze) {
+void UserInterface::printProgress() {
 	int option;
 	bool validOption = false;
 	while (!validOption) {
@@ -347,8 +340,8 @@ void printProgress(MazeGenerator maze) {
 
 		if (option == 1) {
 			validOption = true;
-			maze.printPlayerProgress();
-			saveProgress(maze);
+			maze->printPlayerProgress();
+			saveProgress();
 		}
 		else if (option == 2) {
 			validOption = true;
@@ -359,7 +352,7 @@ void printProgress(MazeGenerator maze) {
 	}
 	
 }
-void displayInformation(vector<MazeGenerator::MazeResults> results, int firstMapSize, int lastMapSize, int firstNumExitsPlayers, int secondNumExitsPlayers) {
+void UserInterface::displayInformation(vector<MazeGenerator::MazeResults> results, int firstMapSize, int lastMapSize, int firstNumExitsPlayers, int secondNumExitsPlayers) {
 	int copyPlayerExit = firstNumExitsPlayers;
 	for (int i = 0; i < results.size(); i++) {
 		for (int j = firstNumExitsPlayers; j < secondNumExitsPlayers; j++) {
@@ -371,7 +364,7 @@ void displayInformation(vector<MazeGenerator::MazeResults> results, int firstMap
 }
 
 
-void generateOneHundredMazes() {
+void UserInterface::generateOneHundredMazes() {
 	int firstMapSize = 0;
 	int lastMapSize = 0;
 	int firstNumExitsPlayers = 0;
@@ -454,59 +447,4 @@ void generateOneHundredMazes() {
 			displayInformation(results,firstMapSize,lastMapSize,firstNumExitsPlayers,secondNumExitsPlayers);
 		}
 	}
-}
-
-int main() {
-	srand(time(NULL));
-	bool endFlag = false;
-	while (!endFlag) {
-		bool optionSelected = false;
-		while (!optionSelected) {
-			int option;
-			cout << "1. Randomly Generate Maze" << endl;
-			cout << "2. Read Maze From File" << endl;
-			cout << "3. Read And Print Player Progress From File" << endl;
-			cout << "4. Generate 100 mazes in a size range" << endl;
-			cout << "5. Exit" << endl;
-
-			cin >> option;
-
-			if (option == 1) {
-				optionSelected = true;
-				MazeGenerator maze = generateRandomMaze();
-
-				if (maze.players.size() >0) {
-
-					if (playGame(maze)) {
-						maze.playerManager();
-						printProgress(maze);
-					}
-				}
-			}
-			else if (option == 2) {
-				optionSelected = true;
-				MazeGenerator maze;
-				readMaze(maze);
-			}
-			else if (option == 3) {
-				optionSelected = true;
-				readPlayerProgressFile();
-
-			}
-			else if (option == 4) {
-				optionSelected = true;
-				generateOneHundredMazes();
-			}
-			else if (option == 5) {
-				endFlag = true;
-				optionSelected = true;
-			}
-			else {
-				cout << "Please enter a valid option." << endl;
-				cout << '/n' << endl;
-			}
-
-		}
-	}
-	return 0;
 }

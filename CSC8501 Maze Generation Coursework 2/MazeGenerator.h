@@ -5,41 +5,14 @@
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
+#include "Pathfinding.h"
+#include "AStarNode.h"
 
 using namespace std;
-
-
 
 class MazeGenerator
 {
 public:
-	enum Direction {
-		UP = 0,
-		DOWN = 1,
-		LEFT = 2,
-		RIGHT = 3
-	};
-
-	struct Positions {
-		int row;
-		int column;
-
-
-		//only used to determine which side of the maze an exit/entrance is on.
-		Direction exitDirection;
-	};
-
-	struct AStarNode {
-		int g; //number of steps from point starting position to current position.
-		int h; // number of steps from current position to destination.
-		AStarNode* parentNode; //stores previous node.
-
-
-		//current position (row is x and y is column)
-		Positions pos;
-
-		int f; //sum of g and h
-	};
 
 	struct Player {
 		Positions pos;
@@ -61,11 +34,11 @@ public:
 		this->mapSize = 0;
 		this->numExits = 0;
 		this->numPlayers = 0;
-		this->map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
+		this->map = new vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
 	}
 
 	MazeGenerator(int mapSize, int numExits, int numPlayers) {
-		this->map = vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
+		this->map = new vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
 		this->mapSize = mapSize;
 		this->numExits = numExits;
 		this->numPlayers = numPlayers;
@@ -84,19 +57,7 @@ public:
 	vector<int> getNewDirection();
 	Direction determineExitDirection(Positions pos);
 
-	
-	vector<AStarNode*> getAdjacentNodes(AStarNode* node, Positions destination);
-	int distanceToDestination(Positions currentPosition, Positions destination);
-	AStarNode* initialiseNode(Positions pos, Positions destination, AStarNode* parentNode);
-	vector<AStarNode> findShortestPath(Positions pos, Positions exit);
-	AStarNode* findSmallestFValue(vector<AStarNode*> evaluationList);
-	bool containsPosition(vector<AStarNode*> closedList, Positions destinaion);
-	vector<AStarNode> createFinalPath(AStarNode* destinationNode);
-	AStarNode* initialiseStartingNode(Positions pos, Positions exit);
-	void eraseListPointers(vector<AStarNode*> evaluationList, vector<AStarNode*> closedPath);
 	void writeOptimalPathToMap(vector<AStarNode> path);
-
-
 	void createPlayers();
 	void movePlayers();
 	void playerManager();
@@ -109,18 +70,21 @@ public:
 	MazeResults hundredMazeGeneration(bool printAllMazes);
 
 
-	vector< vector<char>> map;
+	vector< vector<char>>* map;
 	vector<vector<vector<char>>> playerProgressMap;
 	vector<Positions> exits;
 	vector<Player> players;
 	vector<int> playerFinishingTurn;
+
 	int mapSize;
 	int numExits;
 	int numPlayers;
 	int turnCounter = 0;
 	int deadlockedPlayers = 0;
 	int finishedPlayers = 0;
+	
 	bool hundredMazes = false;
+
 	MazeResults hundredMazeResults;
 	enum Direction direction;
 
