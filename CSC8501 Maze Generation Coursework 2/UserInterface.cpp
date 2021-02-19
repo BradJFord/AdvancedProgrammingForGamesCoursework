@@ -10,16 +10,18 @@ bool UserInterface::playGame() {
 		cout << "2.No" << endl;
 		cin >> option;
 
-		if (option == 1) {
+		switch (option) {
+		case 1:
 			validOption = true;
 			return true;
-		}
-		else if (option == 2) {
+			break;
+		case 2:
 			validOption = true;
 			return false;
-		}
-		else {
+			break;
+		default:
 			cout << "Please enter a valid option" << endl;
+			break;
 		}
 	}
 }
@@ -27,6 +29,7 @@ bool UserInterface::playGame() {
 bool UserInterface::printOptimalPaths(bool playerFlag) {
 	bool optionSelected = false;
 	bool printedPath = false;
+	vector< vector<char>> mapCopy;
 	if (playerFlag) {
 		while (!optionSelected) {
 			int option;
@@ -35,11 +38,11 @@ bool UserInterface::printOptimalPaths(bool playerFlag) {
 			cout << "1. Yes" << endl;
 			cout << "2. No" << endl;
 			cin >> option;
+			Pathfinding path(maze->map, maze->mapSize);
 
-			if (option == 1) {
+			switch (option) {
+			case 1:
 				optionSelected = true;
-				Pathfinding path(maze->map, maze->mapSize);
-				vector< vector<char>> mapCopy;
 				mapCopy = (*maze->map);
 				for (int i = 0; i < maze->players.size(); i++) {
 					maze->writeOptimalPathToMap(path.findShortestPath(maze->players.at(i).pos, maze->finishPosition));
@@ -47,14 +50,15 @@ bool UserInterface::printOptimalPaths(bool playerFlag) {
 				maze->printMaze();
 				*maze->map = mapCopy;
 				printedPath = true;
-			}
-			else if (option == 2) {
+				break;
+			case 2:
 				optionSelected = true;
 				printedPath = false;
-			}
-			else {
+				break;
+			default:
 				cout << "Please enter a valid option." << endl;
 				cout << '/n' << endl;
+				break;
 			}
 		}
 	}
@@ -70,20 +74,22 @@ void UserInterface::saveMaze() {
 		cout << "2. Back to main menu" << endl;
 
 		cin >> option;
+		string filename;
 
-		if (option == 1) {
-			string filename;
+		switch(option) {
+		case 1:
 			cout << "Please enter a name for your file (without '.txt')" << endl;
 			cin >> filename;
 			maze->saveMaze(filename + ".txt");
 			optionSelected = true;
-		}
-		else if (option == 2) {
+			break;
+		case 2:
 			optionSelected = true;
-		}
-		else {
+			break;
+		default:
 			cout << "Please enter a valid option." << endl;
 			cout << '/n' << endl;
+			break;
 		}
 	}
 }
@@ -98,16 +104,18 @@ bool UserInterface::generatePlayersOrNot() {
 		cout << "2.No" << endl;
 		cin >> option;
 
-		if (option == 1) {
-			validOption = true;
-			return true;
-		}
-		else if (option == 2) {
-			validOption = true;
-			return false;
-		}
-		else {
-			cout << "Please enter a valid option." << endl;
+		switch (option) {
+			case 1:
+				validOption = true;
+				return true;
+				break;
+			case 2:
+				validOption = true;
+				return false;
+				break;
+			default:
+				cout << "Please enter a valid option." << endl;
+				break;
 		}
 	}
 }
@@ -184,16 +192,19 @@ void UserInterface::playersDetected() {
 		cout << "2.Keep current players" << endl;
 		cin >> option;
 
-		if (option == 1) {
+
+		switch (option) {
+		case 1:
 			validOption = true;
 			maze->deletePlayers();
 			maze->createPlayers();
-		}
-		else if (option == 2) {
+			break;
+		case 2:
 			validOption = true;
-		}
-		else {
+			break;
+		default:
 			cout << "Please enter a valid option." << endl;
+			break;
 		}
 	}
 }
@@ -214,30 +225,28 @@ void UserInterface::readMaze() {
 				cout << "2. Exit back to main menu" << endl;
 				cin >> option;
 
-				if (option == 1) {
+				switch (option) {
+				case 1:
 					optionSelected = true;
-				}
-				else if (option == 2) {
+					break;
+				case 2:
 					validFile = true;
 					optionSelected = true;
-				}
-				else {
+					break;
+				default:
 					cout << "Please enter a valid option." << endl;
 					cout << '/n' << endl;
+					break;
 				}
-
 			}
 		}
 		else {
 			validFile = true;
 			if (maze->players.size()>0) {
 				playersDetected();
-
 			}
 			maze->printMaze();
-
-			MazeGenerator mazeCopy = getMaze();
-
+			
 			if (playGame()) {
 				maze->playerManager();
 				printProgress();
@@ -261,18 +270,19 @@ void UserInterface::readPlayerProgressFile() {
 				cout << "2. Exit back to main menu" << endl;
 				cin >> option;
 
-				if (option == 1) {
+				switch (option) {
+				case 1:
 					optionSelected = true;
-				}
-				else if (option == 2) {
+					break;
+				case 2:
 					validFile = true;
 					optionSelected = true;
-				}
-				else {
+					break;
+				default:
 					cout << "Please enter a valid option." << endl;
 					cout << '/n' << endl;
+					break;
 				}
-
 			}
 		}
 		else {
@@ -293,17 +303,19 @@ void UserInterface::saveProgress() {
 		cout << "2.No" << endl;
 		cin >> option;
 
-		if (option == 1) {
+		switch (option) {
+		case 1:
 			validOption = true;
 			cout << "Please enter the name of the file you would like to save. (without '.txt')" << endl;
 			cin >> filename;
-			maze->savePlayerProgress(filename+".txt");
-		}
-		else if (option == 2) {
+			maze->savePlayerProgress(filename + ".txt");
+			break;
+		case 2:
 			validOption = true;
-		}
-		else {
+			break;
+		default:
 			cout << "Please enter a valid option" << endl;
+			break;
 		}
 	}
 }
@@ -316,19 +328,20 @@ void UserInterface::printProgress() {
 		cout << "2.No" << endl;
 		cin >> option;
 
-		if (option == 1) {
+		switch (option) {
+		case 1:
 			validOption = true;
 			maze->printPlayerProgress();
 			saveProgress();
-		}
-		else if (option == 2) {
+			break;
+		case 2:
 			validOption = true;
-		}
-		else {
+			break;
+		default:
 			cout << "Please enter a valid option" << endl;
+			break;
 		}
 	}
-	
 }
 void UserInterface::displayInformation(vector<MazeGenerator::MazeResults> results, int firstMapSize, int lastMapSize, int firstNumExitsPlayers, int secondNumExitsPlayers) {
 	int copyPlayerExit = firstNumExitsPlayers;
@@ -406,15 +419,17 @@ void UserInterface::generateOneHundredMazes() {
 		cout << "2.No" << endl;
 		cin >> option;
 
-		if (option ==1) {
+		switch (option) {
+		case 1:
 			validOption = true;
 			printAllMazes = true;
-		}
-		else if (option ==2) {
+			break;
+		case 2:
 			validOption = true;
-		}
-		else {
+			break;
+		default:
 			cout << "Please enter a valid number of exits/players." << endl;
+			break;
 		}
 	}
 	vector<MazeGenerator::MazeResults> results;

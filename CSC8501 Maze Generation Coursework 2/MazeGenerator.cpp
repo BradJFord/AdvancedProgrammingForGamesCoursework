@@ -64,30 +64,34 @@ bool MazeGenerator::readMazeFile(string filename) {
 			}
 			for (int i = 0; i < line.size(); i++) {
 				(*map)[lineNumber][i] = line[i];
-				if ((*map)[lineNumber][i] == 'E') {
-					exitCount++;
+				switch ((*map)[lineNumber][i]) {
+					case 'E':
+						exitCount++;
+						Positions newExit;
+						newExit.row = lineNumber;
+						newExit.column = i;
+						newExit.exitDirection = determineExitDirection(newExit);
+						exits.push_back(newExit);
+						break;
+					case 'F':
+						this->finishPosition.row = lineNumber;
+						this->finishPosition.column = i;
+						break;
+					case 'P':
+						Player newPlayer;
+						newPlayer.pos.row = lineNumber;
+						newPlayer.pos.column = i;
+						players.push_back(newPlayer);
+						playerCounter++;
+						break;
+				}
 
-					Positions newExit;
-					newExit.row = lineNumber;
-					newExit.column = i;
-					newExit.exitDirection = determineExitDirection(newExit);
-					exits.push_back(newExit);
-				}
-				else if ((*map)[lineNumber][i] == 'F') {
-					this->finishPosition.row = lineNumber;
-					this->finishPosition.column = i;
-				}
-				else if ((*map)[lineNumber][i] == 'P') {
-					Player newPlayer;
-					newPlayer.pos.row = lineNumber;
-					newPlayer.pos.column = i;
-					players.push_back(newPlayer);
-					playerCounter++;
-				}
 			}
 			lineNumber++;
 		}
 		inFile.close();
+		this->numPlayers = playerCounter;
+		this->numExits = exitCount;
 		return true;
 	}
 	else {
@@ -96,40 +100,41 @@ bool MazeGenerator::readMazeFile(string filename) {
 			return false;
 		}
 	}
-	this->numPlayers = playerCounter;
-	this->numExits = exitCount;
 }
 
 
 
 bool MazeGenerator::checkNeighbourTiles(Positions pos, Direction dir) {
-	if (dir == UP) {
-		if (pos.row > 2) {
-			if ((*map)[pos.row - 2][pos.column] != ' ') {
-				return true;
+	
+	switch (dir) {
+		case UP:
+			if (pos.row > 2) {
+				if ((*map)[pos.row - 2][pos.column] != ' ') {
+					return true;
+				}
 			}
-		}
-	}
-	else if (dir == DOWN) {
-		if (pos.row < mapSize - 2) {
-			if ((*map)[pos.row + 2][pos.column] != ' ') {
-				return true;
+			break;
+		case DOWN:
+			if (pos.row < mapSize - 2) {
+				if ((*map)[pos.row + 2][pos.column] != ' ') {
+					return true;
+				}
 			}
-		}
-	}
-	else if (dir == LEFT) {
-		if (pos.column > 2) {
-			if ((*map)[pos.row][pos.column - 2] != ' ') {
-				return true;
+			break;
+		case LEFT:
+			if (pos.column > 2) {
+				if ((*map)[pos.row][pos.column - 2] != ' ') {
+					return true;
+				}
 			}
-		}
-	}
-	else if (dir == RIGHT) {
-		if (pos.column < mapSize - 2) {
-			if ((*map)[pos.row][pos.column + 2] != ' ') {
-				return true;
+			break;
+		case RIGHT:
+			if (pos.column < mapSize - 2) {
+				if ((*map)[pos.row][pos.column + 2] != ' ') {
+					return true;
+				}
 			}
-		}
+			break;
 	}
 	return false;
 }
@@ -250,25 +255,27 @@ void MazeGenerator::removeOuterWalls() {
 
 
 bool MazeGenerator::isValidExit(Positions pos, Direction dir) {
-	if (dir == UP) {
-		if ((*map)[pos.row + 1][pos.column] == ' ') {
-			return true;
-		}
-	}
-	else if (dir == DOWN) {
-		if ((*map)[pos.row - 1][pos.column] == ' ') {
-			return true;
-		}
-	}
-	else if (dir == LEFT) {
-		if ((*map)[pos.row][pos.column + 1] == ' ') {
-			return true;
-		}
-	}
-	else if (dir == RIGHT) {
-		if ((*map)[pos.row][pos.column - 1] == ' ') {
-			return true;
-		}
+	switch (dir) {
+		case UP:
+			if ((*map)[pos.row + 1][pos.column] == ' ') {
+				return true;
+			}
+			break;
+		case DOWN:
+			if ((*map)[pos.row - 1][pos.column] == ' ') {
+				return true;
+			}
+			break;
+		case LEFT:
+			if ((*map)[pos.row][pos.column + 1] == ' ') {
+				return true;
+			}
+			break;
+		case RIGHT:
+			if ((*map)[pos.row][pos.column - 1] == ' ') {
+				return true;
+			}
+			break;
 	}
 	return false;
 }
@@ -293,30 +300,27 @@ void MazeGenerator::assignExits() {
 
 		int tempMazeSize = map->size() - 1;
 		Positions potentialExit;
-		if (direction == Direction::UP) {
-			potentialExit.row = 0;
-			potentialExit.column = rand() % tempMazeSize + 1;
-			potentialExit.exitDirection = UP;
-
-		}
-		else if (direction == Direction::LEFT) {
-			potentialExit.row = rand() % map->size();
-			potentialExit.column = 0;
-			potentialExit.exitDirection = LEFT;
-
-
-		}
-		else if (direction == Direction::RIGHT) {
-			potentialExit.row = rand() % tempMazeSize + 1;
-			potentialExit.column = tempMazeSize;
-			potentialExit.exitDirection = RIGHT;
-
-		}
-		else if (direction == Direction::DOWN) {
-			potentialExit.row = tempMazeSize;
-			potentialExit.column = rand() % tempMazeSize + 1;
-			potentialExit.exitDirection = DOWN;
-
+		switch (direction) {
+			case UP:
+				potentialExit.row = 0;
+				potentialExit.column = rand() % tempMazeSize + 1;
+				potentialExit.exitDirection = UP;
+				break;
+			case LEFT:
+				potentialExit.row = rand() % map->size();
+				potentialExit.column = 0;
+				potentialExit.exitDirection = LEFT;
+				break;
+			case RIGHT:
+				potentialExit.row = rand() % tempMazeSize + 1;
+				potentialExit.column = tempMazeSize;
+				potentialExit.exitDirection = RIGHT;
+				break;
+			case DOWN:
+				potentialExit.row = tempMazeSize;
+				potentialExit.column = rand() % tempMazeSize + 1;
+				potentialExit.exitDirection = DOWN;
+				break;
 		}
 		if (isValidExit(potentialExit, direction) && failCount < 50) {
 			(*map)[potentialExit.row][potentialExit.column] = 'E';
@@ -357,21 +361,24 @@ void MazeGenerator::createMaze(bool createPlayerList) {
 void MazeGenerator::createPlayers() {
 	for (int i = 0; i < exits.size();i++) {
 		Player newPlayer;
-		if (exits.at(i).exitDirection == UP) {
-			newPlayer.pos.row = exits.at(i).row + 1;
-			newPlayer.pos.column = exits.at(i).column;
-		}
-		else if (exits.at(i).exitDirection == DOWN) {
-			newPlayer.pos.row = exits.at(i).row - 1;
-			newPlayer.pos.column = exits.at(i).column;
-		}
-		else if (exits.at(i).exitDirection == LEFT) {
-			newPlayer.pos.row = exits.at(i).row;
-			newPlayer.pos.column = exits.at(i).column + 1;
-		}
-		else if (exits.at(i).exitDirection == RIGHT) {
-			newPlayer.pos.row = exits.at(i).row;
-			newPlayer.pos.column = exits.at(i).column - 1;
+
+		switch (exits.at(i).exitDirection) {
+			case UP:
+				newPlayer.pos.row = exits.at(i).row + 1;
+				newPlayer.pos.column = exits.at(i).column;
+				break;
+			case DOWN:
+				newPlayer.pos.row = exits.at(i).row - 1;
+				newPlayer.pos.column = exits.at(i).column;
+				break;
+			case LEFT:
+				newPlayer.pos.row = exits.at(i).row;
+				newPlayer.pos.column = exits.at(i).column + 1;
+				break;
+			case RIGHT:
+				newPlayer.pos.row = exits.at(i).row;
+				newPlayer.pos.column = exits.at(i).column - 1;
+				break;
 		}
 		players.push_back(newPlayer);
 	}
