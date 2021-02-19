@@ -400,7 +400,7 @@ bool MazeGenerator::finishingMove(Player player) {
 }
 
 
-void MazeGenerator::movePlayers() {
+void MazeGenerator::movePlayers(Pathfinding path) {
 	for (int i = 0; i < players.size(); i++) {
 		if (players.at(i).deadlocked == false && validMove(players.at(i))) {
 			if (!finishingMove(players.at(i))) {
@@ -432,7 +432,6 @@ void MazeGenerator::movePlayers() {
 				hundredMazeResults.partialCompleteableCount++;
 				players.clear();
 			}
-			Pathfinding path(map, mapSize);
 			if (players.size()>0) {
 				players.at(i).stationaryTurns++;
 				if (players.at(i).stationaryTurns >= 50) {
@@ -457,7 +456,7 @@ bool MazeGenerator::readPlayerProgress(string filename) {
 		int lineNumber = 0;
 		while (getline(inFile, line)) {
 			if (line[0] == '-') {
-				playerProgressMap.push_back((*map));
+				playerProgressMap->push_back((*map));
 				lineNumber = 0;
 				getline(inFile,line);
 			}
@@ -467,7 +466,7 @@ bool MazeGenerator::readPlayerProgress(string filename) {
 			}
 			for (int i = 0; i < line.size(); i++) {
 				(*map)[lineNumber][i] = line[i];
-				if (playerProgressMap.size()<=0) {
+				if (playerProgressMap->size()<=0) {
 					if ((*map)[lineNumber][i] == 'E') {
 						exitCount++;
 
@@ -500,12 +499,12 @@ bool MazeGenerator::readPlayerProgress(string filename) {
 void MazeGenerator::savePlayerProgress(string filename) {
 	ofstream saveFile;
 	saveFile.open(filename);
-	for (int i = 0; i < playerProgressMap.size(); i++) {
-		for (int j = 0; j < playerProgressMap.at(i).size(); j++) {
+	for (int i = 0; i < playerProgressMap->size(); i++) {
+		for (int j = 0; j < playerProgressMap->at(i).size(); j++) {
 			string line;
-			for (int k = 0; k < playerProgressMap.at(i)[0].size(); k++) {
-				playerProgressMap.at(i)[j][k] = (playerProgressMap.at(i)[j][k] == 'o') ? playerProgressMap.at(i)[j][k] = ' ' : playerProgressMap.at(i)[j][k];
-				line.push_back(playerProgressMap.at(i)[j][k]);
+			for (int k = 0; k < playerProgressMap->at(i)[0].size(); k++) {
+				playerProgressMap->at(i)[j][k] = (playerProgressMap->at(i)[j][k] == 'o') ? playerProgressMap->at(i)[j][k] = ' ' : playerProgressMap->at(i)[j][k];
+				line.push_back(playerProgressMap->at(i)[j][k]);
 			}
 			saveFile << line << endl;
 		}
@@ -518,13 +517,13 @@ void MazeGenerator::savePlayerProgress(string filename) {
 void MazeGenerator::printPlayerProgress() {
 	vector<int> finishTurns = playerFinishingTurn;
 	int finishedPlayerCount = 0;
-	for (int i = 0; i < playerProgressMap.size();i++) {
+	for (int i = 0; i < playerProgressMap->size();i++) {
 		cout << '\n' << endl;
 		cout << "Turn " << i+1 << endl;
 		cout << '\n' << endl;
-		for (int j = 0; j < playerProgressMap.at(i).size(); j++) {
-			for (int k = 0; k < playerProgressMap.at(i)[0].size(); k++) {
-				cout << playerProgressMap.at(i)[j][k] << "";
+		for (int j = 0; j < playerProgressMap->at(i).size(); j++) {
+			for (int k = 0; k < playerProgressMap->at(i)[0].size(); k++) {
+				cout << playerProgressMap->at(i)[j][k] << "";
 				if (k == (*map)[0].size() - 1) {
 					cout << endl;
 				}
@@ -560,12 +559,12 @@ void MazeGenerator::playerManager() {
 	Pathfinding path(map,mapSize);
 	for (int i = 0; i < players.size();i++) {
 		players.at(i).path = path.findShortestPath(players.at(i).pos,finishPosition);
-		playerProgressMap.push_back((*map));
+		playerProgressMap->push_back((*map));
 	}
 	while (players.size()>0) {
-		movePlayers();
+		movePlayers(path);
 		turnCounter++;
-		playerProgressMap.push_back((*map));
+		playerProgressMap->push_back((*map));
 	}
 	if (deadlockedPlayers <=0 && finishedPlayers >0) {
 		if (!hundredMazes) {
@@ -583,7 +582,7 @@ MazeGenerator::MazeResults MazeGenerator::hundredMazeGeneration(bool printAllMaz
 
 		exits.clear();
 		map = new vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
-		playerProgressMap.clear();
+		playerProgressMap->clear();
 		numPlayers = numPlayersCopy;
 		numExits = numExitsCopy;
 		createMaze(true);

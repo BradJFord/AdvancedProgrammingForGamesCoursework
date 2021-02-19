@@ -39,46 +39,23 @@ bool UserInterface::printOptimalPaths(bool playerFlag) {
 			if (option == 1) {
 				optionSelected = true;
 				Pathfinding path(maze->map, maze->mapSize);
+				vector< vector<char>> mapCopy;
+				mapCopy = (*maze->map);
 				for (int i = 0; i < maze->players.size(); i++) {
 					maze->writeOptimalPathToMap(path.findShortestPath(maze->players.at(i).pos, maze->finishPosition));
 				}
 				maze->printMaze();
+				*maze->map = mapCopy;
 				printedPath = true;
 			}
 			else if (option == 2) {
 				optionSelected = true;
 				printedPath = false;
-
 			}
 			else {
 				cout << "Please enter a valid option." << endl;
 				cout << '/n' << endl;
 			}
-		}
-	}
-	else {
-		int option;
-		cout << endl;
-		cout << "Would you like to print the optimal paths from the entrances to the exit?" << endl;
-		cout << "1. Yes" << endl;
-		cout << "2. No" << endl;
-		cin >> option;
-
-		if (option == 1) {
-			optionSelected = true;
-			Pathfinding path(maze->map, maze->mapSize);
-			for (int i = 0; i < maze->exits.size(); i++) {
-				maze->writeOptimalPathToMap(path.findShortestPath(maze->finishPosition, maze->exits.at(i)));
-			}
-			maze->printMaze();
-		}
-		else if (option == 2) {
-			optionSelected = true;
-
-		}
-		else {
-			cout << "Please enter a valid option." << endl;
-			cout << '/n' << endl;
 		}
 	}
 	return printedPath;
@@ -228,6 +205,7 @@ void UserInterface::readMaze() {
 		cout << "" << endl;
 		string filename;
 		cin >> filename;
+		maze = new MazeGenerator();
 		if (!maze->readMazeFile(filename + ".txt")) {
 			int option = 0;
 			bool optionSelected = false;

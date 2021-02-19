@@ -35,6 +35,7 @@ public:
 		this->numExits = 0;
 		this->numPlayers = 0;
 		this->map = new vector<vector<char>>(mapSize, vector<char>(mapSize, 'x'));
+		this->playerProgressMap = new vector<vector<vector<char>>>;
 	}
 
 	MazeGenerator(int mapSize, int numExits, int numPlayers) {
@@ -42,6 +43,7 @@ public:
 		this->mapSize = mapSize;
 		this->numExits = numExits;
 		this->numPlayers = numPlayers;
+		this->playerProgressMap = new vector<vector<vector<char>>>;
 	}
 
 	void printMaze();
@@ -59,7 +61,7 @@ public:
 
 	void writeOptimalPathToMap(vector<AStarNode> path);
 	void createPlayers();
-	void movePlayers();
+	void movePlayers(Pathfinding path);
 	void playerManager();
 	bool validMove(Player player);
 	bool finishingMove(Player player);
@@ -71,7 +73,7 @@ public:
 
 
 	vector< vector<char>>* map;
-	vector<vector<vector<char>>> playerProgressMap;
+	vector<vector<vector<char>>>* playerProgressMap;
 	vector<Positions> exits;
 	vector<Player> players;
 	vector<int> playerFinishingTurn;
